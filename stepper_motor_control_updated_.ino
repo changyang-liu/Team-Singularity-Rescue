@@ -1,14 +1,15 @@
 // NOTE Maximum and minimum angularspeed may vary 
+// 1/8 step for driver -- change the steps to improve smoothness
 
 int M1dirpin = 4;
 int M1steppin = 5;
 int M2dirpin = 7;
 int M2steppin = 6;
 int steps;
-float angularspeed; // 110-2600deg/s 
+float angularspeed; // 60-1150deg/s 
 
 void motor1(float M1speed, float degs){ //M1speed and M2speed from -100 to 100
-  steps=degs/1.8;
+  steps=degs/0.225;
   if(M1speed>0){
     digitalWrite(M1dirpin,LOW);
   }else if (M1speed<0){
@@ -16,8 +17,8 @@ void motor1(float M1speed, float degs){ //M1speed and M2speed from -100 to 100
   }else{
     steps=0;
   }
-  angularspeed=100+abs(M1speed*25);
-  int t1=(int)(1000000/angularspeed)*1.8;
+  angularspeed=0.5*(100+abs(M1speed*25));
+  int t1=(int)(1000000/angularspeed)*0.225;
   delayMicroseconds(2);
   //int StartTime;
   //StartTime=millis();
@@ -33,7 +34,7 @@ void motor1(float M1speed, float degs){ //M1speed and M2speed from -100 to 100
 }
 
 void motor2(float M2speed, float degs){
-  steps=degs/1.8;
+  steps=degs/0.225;
   if(M2speed>0){
     digitalWrite(M2dirpin,LOW);
   }else if (M2speed<0){
@@ -41,13 +42,13 @@ void motor2(float M2speed, float degs){
   }else{
     steps=0;
   }
-  angularspeed=100+abs(M2speed*25);
-  int t2=(int)(1000000/angularspeed)*1.8;
+  angularspeed=0.5*(100+abs(M2speed*25));
+  int t2=(int)(1000000/angularspeed)*0.225;
   delayMicroseconds(2);
-  //int StartTime;
+  int StartTime;
   //for(int i=0;i<100;i++){ //testloop
     //angularspeed=angularspeed+50;
-    //StartTime=millis();
+   StartTime=millis();
     for(int j=0;j<steps;j++){
       digitalWrite(M2steppin,LOW);
       delayMicroseconds(2); //maxspeed=1 minspeed=900000
@@ -55,9 +56,9 @@ void motor2(float M2speed, float degs){
       delayMicroseconds(t2); //maxspeed=900 minspeed=90000
   }
  //}
- /*int CurrentTime = millis();
+ int CurrentTime = millis();
    int ElapsedTime = CurrentTime - StartTime;
-   Serial.println(ElapsedTime); */
+   Serial.println(ElapsedTime); 
 }
 
 
@@ -72,6 +73,10 @@ void setup()
 
 void loop()
 {
-motor1(50, 360);
-motor2(50, 360);
+motor1(0, 360);
+motor2(100, 360);
+//delay(500);
+//motor2(-10, 50);
+//delay(500);
+//motor2(5, 60);
 }
