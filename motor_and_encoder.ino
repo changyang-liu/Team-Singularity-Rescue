@@ -19,10 +19,10 @@ volatile boolean PastB2 = 0;
 
 long currentPos1;
 long currentPos2;
-long newPos1 = 0;
-long newPos2 = 0; 
-int Speed1 = 0;
-int Speed2 = 0;
+long previousPos1 = 0;
+long previousPos2 = 0; 
+int dtheta1 = 0;
+int dtheta2 = 0;
 
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault;
@@ -109,23 +109,19 @@ void setup()
 }
 
 
-void loop() // find rotational speed(doesn't work right now)
+void loop() // find rotational Speed(doesn't work right now)
 {
-  md.setSpeeds(80, 100);
-  /*currentPos1 = abs(encoder1Pos);
+  md.setSpeeds(100, 100);
+  currentPos1 = abs(encoder1Pos);
   currentPos2 = abs(encoder2Pos);
-  if(currentPos1 != abs(encoder1Pos)){
-    newPos1 = abs(encoder1Pos);
-    Speed1 = currentPos1 - newPos1;
-    Serial.print("Speed1: ");
-    Serial.println(Speed1);
-    }
-  if(currentPos2 != abs(encoder2Pos)){
-    newPos2 = abs(encoder2Pos);
-    Speed2 = newPos2 - currentPos2;
-    Serial.print("Speed2: ");
-    Serial.println(Speed2);
-  }*/
+  dtheta1 = currentPos1 - previousPos1;
+  Serial.print("dtheta1: ");
+  Serial.println(dtheta1);
+  dtheta2 = currentPos2 - previousPos2;
+  Serial.print("dtheta2: ");
+  Serial.println(dtheta2);
+  previousPos1 = currentPos1;
+  previousPos2 = currentPos2;
 }
 
 //you may easily modify the code  get quadrature..
