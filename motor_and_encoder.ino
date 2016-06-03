@@ -17,51 +17,39 @@ volatile boolean PastA2 = 0;
 volatile boolean PastB1 = 0;
 volatile boolean PastB2 = 0;
 
-long currentPos1;
-long currentPos2;
-long previousPos1 = 0;
-long previousPos2 = 0; 
-int dtheta1 = 0;
-int dtheta2 = 0;
-
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
-  stopIfFault;
+  stopIfFault();
   unsigned long counts;
-  if(motor1Speed==0){
-    counts = (long)(degs*25/18+(200-motor2Speed)*0.3);
+  if(motor1Speed==0){  //when only right motor is moving
+    counts = (long)(degs*55/36+(100-motor2Speed)*0.3);
     while(abs(encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
-      Serial.println(abs(encoder1Pos));
-      md.setM1Speed(motor1Speed);
-      md.setM2Speed(motor2Speed);
-    } 
+      md.setSpeeds(motor1Speed, motor2Speed);
+      Serial.println(abs(encoder2Pos));
+    }
    }
   else{
-    counts = (long)(degs*25/18+(200-motor1Speed)*0.3);
+    counts = (long)(degs*55/36+(100-motor1Speed)*0.3);
     while(abs(encoder1Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+      md.setSpeeds(motor1Speed, motor2Speed);
       Serial.println(abs(encoder1Pos));
-      md.setM1Speed(motor1Speed);
-      md.setM2Speed(motor2Speed);
-    } 
-   }
+    }
+   } 
   //Serial.println(counts);
-  md.setM1Brake(400);
-  md.setM2Brake(400);
+  md.setBrakes(400, 400);
   encoder1Pos=0;
   encoder2Pos=0;
 }
 
 void moveTime(int motor1Speed, int motor2Speed, long t){ //milliseconds
   long elapsedtime=0;
-  stopIfFault;
+  stopIfFault();
   long starttime=millis();
   while(elapsedtime<t){ 
-    md.setM1Speed(motor1Speed);
-    md.setM2Speed(motor2Speed);
+    md.setSpeeds(motor1Speed, motor2Speed);
     elapsedtime=millis()-starttime;
-    Serial.println(elapsedtime);
+    //Serial.println(elapsedtime);
    } 
-  md.setM1Brake(400);
-  md.setM2Brake(400);
+  md.setBrakes(400, 400);
  }
 
 
@@ -78,6 +66,26 @@ void stopIfFault()
     Serial.println("M2 fault");
     while(1);
   }
+}
+
+void testSpeeds(){ // find rotational Speed
+  long currentPos1;
+  long currentPos2;
+  long previousPos1 = 0;
+  long previousPos2 = 0; 
+  int dtheta1 = 0;
+  int dtheta2 = 0;
+  md.setSpeeds(100, 100);
+  currentPos1 = abs(encoder1Pos);
+  currentPos2 = abs(encoder2Pos);
+  dtheta1 = currentPos1 - previousPos1;
+  Serial.print("dtheta1: ");
+  Serial.println(dtheta1);
+  dtheta2 = currentPos2 - previousPos2;
+  Serial.print("dtheta2: ");
+  Serial.println(dtheta2);
+  previousPos1 = currentPos1;
+  previousPos2 = currentPos2;
 }
 
 void setup() 
@@ -109,19 +117,12 @@ void setup()
 }
 
 
-void loop() // find rotational Speed(doesn't work right now)
+void loop() 
 {
-  md.setSpeeds(100, 100);
-  currentPos1 = abs(encoder1Pos);
-  currentPos2 = abs(encoder2Pos);
-  dtheta1 = currentPos1 - previousPos1;
-  Serial.print("dtheta1: ");
-  Serial.println(dtheta1);
-  dtheta2 = currentPos2 - previousPos2;
-  Serial.print("dtheta2: ");
-  Serial.println(dtheta2);
-  previousPos1 = currentPos1;
-  previousPos2 = currentPos2;
+  //moveDegs(100, 100, 500);
+  //moveDegs(100, 0, 300);
+  moveDegs(200, 200, 360);
+  delay(1000);
 }
 
 //you may easily modify the code  get quadrature..
