@@ -20,6 +20,8 @@ volatile boolean PastB2 = 0;
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault();
   unsigned long counts;
+  encoder1Pos=0;
+  encoder2Pos=0;
   if(motor1Speed==0){  //when only right motor is moving
     counts = (long)(degs*55/36+(100-motor2Speed)*0.3);
     while(abs(encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
