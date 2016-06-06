@@ -50,4 +50,3 @@ return scaled4;
 }
 
 
-
