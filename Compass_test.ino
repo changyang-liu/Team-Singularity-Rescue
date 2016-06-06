@@ -1,8 +1,10 @@
+//Compass will auto-calibrate the starting position to 0, and base its readings off that position
+
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
  
-/* Assign a unique ID to this sensor at the same time */
+
 Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 
