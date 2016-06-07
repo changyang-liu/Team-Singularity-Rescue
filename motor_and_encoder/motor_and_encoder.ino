@@ -6,7 +6,6 @@ DualVNH5019MotorShield md;
 Scaled light;
 
 
-//PIN's definition
 #define encoder1PinA  18
 #define encoder1PinB  19
 #define encoder2PinA  20
@@ -20,8 +19,10 @@ volatile boolean PastA2 = 0;
 volatile boolean PastB1 = 0;
 volatile boolean PastB2 = 0;
 
-float rawRange = 1024; // 3.3v          //conversion to lux - not important as of now
-float logRange = 5.0; // 3.3v = 10^5 lux 
+
+
+
+
 
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault();
@@ -110,6 +111,7 @@ void lineTrack(){
     float kp=2.5;
     int baseSpeed=0;
     int leftError, rightError;
+    
     leftError=left_average-lightTarget;
     rightError=right_average-lightTarget;
     motor1Speed= kp*leftError+baseSpeed;
@@ -119,54 +121,45 @@ void lineTrack(){
   }
 }
 
-
+float integral = 0;
+int maxIntegral = 10000;
+int derivative = 0;
+int lastError = 0;
+float kp=1;
+float ki = 1;
+float integralFactor = 0.5;
+float kd = 200;
+int baseSpeed=50;
+int motor1Speed, motor2Speed,error;
+  
 void lineTrack2(){
+  stopIfFault();
+  int far_left=light.scale1();
+  int close_left=light.scale2();
+  int close_right=light.scale3();
+  int far_right=light.scale4();
+  int left_average=(far_left+close_left)/2;
+  int right_average=(far_right+close_right)/2;
 
-  float integral = 0;
-  int maxIntegral = 10000;
-  int derivative = 0;
-  int lastError = 0;
-  float kp=5;
-  float ki = 0.5;
-  float integralFactor = 0.7;
-  float kd = 0;
-  int baseSpeed=50;
-  int motor1Speed, motor2Speed,error;
-  while(true){
-    stopIfFault();
-    int far_left=light.scale1();
-    int close_left=light.scale2();
-    int close_right=light.scale3();
-    int far_right=light.scale4();
-    int left_average=(far_left+close_left)/2;
-    int right_average=(far_right+close_right)/2;
-
-    error=left_average-right_average;
-    derivative = error-lastError;
-    integral = integral*integralFactor + error;
-    if (abs(integral) >= maxIntegral) {
-      integral = maxIntegral;
-    }
-    float turn = kp*error+ki*integral+kd*derivative;
-    motor1Speed=baseSpeed + turn;
-    motor2Speed=baseSpeed - turn  ;
-    lastError = error;
-    md.setSpeeds(motor1Speed, motor2Speed);
-    //Serial.println(error);
+  error=left_average-right_average;
+  derivative = error-lastError;
+  integral = integral*integralFactor + error;
+  if (abs(integral) >= maxIntegral) {
+    integral = maxIntegral;
   }
+  float turn = kp*error+ki*integral+kd*derivative;
+  motor1Speed=baseSpeed + turn;
+  motor2Speed=baseSpeed - turn  ;
+  lastError = error;
+  md.setSpeeds(motor1Speed, motor2Speed);
+  //Serial.println(error);
 }
 
 
+
 void setup() 
-{
-  pinMode(22, OUTPUT);      //power the sensors, which are connected to digital pins 22, 23, 24, 25
-  pinMode(23, OUTPUT);
-  pinMode(24, OUTPUT);
-  pinMode(25, OUTPUT);
-  digitalWrite(22, HIGH);
-  digitalWrite(23, HIGH);
-  digitalWrite(24, HIGH);
-  digitalWrite(25, HIGH);
+{ pinMode(23,INPUT);
+
   pinMode(encoder1PinA, INPUT);
   //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
@@ -196,9 +189,11 @@ void setup()
 
 void loop() 
 {
+  
   //md.setSpeeds(100,100);
-  lineTrack2();
   //light.print();
+  
+  lineTrack2();
 }
 
 //you may easily modify the code  get quadrature..
