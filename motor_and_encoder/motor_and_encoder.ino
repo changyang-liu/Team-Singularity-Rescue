@@ -10,7 +10,7 @@ Scaled light;
 #define encoder1PinA  18
 #define encoder1PinB  19
 #define encoder2PinA  20
-#define encoder2PinB  21
+#define encoder2PinB  21   
 
 
 volatile long encoder1Pos = 0;
@@ -126,8 +126,8 @@ void lineTrack2(){
     int close_left=light.scale2();
     int close_right=light.scale3();
     int far_right=light.scale4();
-    int left_average=(1.5*far_left+close_left)/2;
-    int right_average=(1.5*far_right+close_right)/2;
+    int left_average=(far_left+close_left)/2;
+    int right_average=(far_right+close_right)/2;
     stopIfFault();
     int motor1Speed, motor2Speed;
     float kp=2;
