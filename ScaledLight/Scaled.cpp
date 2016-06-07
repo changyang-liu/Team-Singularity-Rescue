@@ -40,5 +40,15 @@ if (scaled4 <0) {scaled4=0;}
 return scaled4;
 }
 
+void print()
+{ Serial.print("1: ");
+Serial.print(scaled1);
+Serial.print(" 2: ");
+Serial.print(scaled2);
+Serial.print(" 3: ");
+Serial.print(scaled3);
+Serial.print(" 4: ");
+Serial.print(scaled4);
+}
 
 
