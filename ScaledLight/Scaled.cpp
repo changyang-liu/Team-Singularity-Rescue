@@ -41,14 +41,15 @@ return scaled4;
 }
 
 void print()
-{ Serial.print("1: ");
-Serial.print(scaled1);
+{
+Serial.print("1: ");
+Serial.print(scale1());
 Serial.print(" 2: ");
-Serial.print(scaled2);
+Serial.print(scale2());
 Serial.print(" 3: ");
-Serial.print(scaled3);
+Serial.print(scale3());
 Serial.print(" 4: ");
-Serial.print(scaled4);
+Serial.println(scale4());
 }
 
 
