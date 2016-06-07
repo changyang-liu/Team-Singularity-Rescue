@@ -121,21 +121,36 @@ void lineTrack(){
 
 
 void lineTrack2(){
+
+  float integral = 0;
+  int maxIntegral = 10000;
+  int derivative = 0;
+  int lastError = 0;
+  float kp=5;
+  float ki = 0.5;
+  float integralFactor = 0.7;
+  float kd = 0;
+  int baseSpeed=50;
+  int motor1Speed, motor2Speed,error;
   while(true){
+    stopIfFault();
     int far_left=light.scale1();
     int close_left=light.scale2();
     int close_right=light.scale3();
     int far_right=light.scale4();
     int left_average=(far_left+close_left)/2;
     int right_average=(far_right+close_right)/2;
-    stopIfFault();
-    int motor1Speed, motor2Speed;
-    float kp=2;
-    int baseSpeed=50;
-    int error;
+
     error=left_average-right_average;
-    motor1Speed=baseSpeed+kp*error;
-    motor2Speed=baseSpeed-kp*error;
+    derivative = error-lastError;
+    integral = integral*integralFactor + error;
+    if (abs(integral) >= maxIntegral) {
+      integral = maxIntegral;
+    }
+    float turn = kp*error+ki*integral+kd*derivative;
+    motor1Speed=baseSpeed + turn;
+    motor2Speed=baseSpeed - turn  ;
+    lastError = error;
     md.setSpeeds(motor1Speed, motor2Speed);
     //Serial.println(error);
   }
