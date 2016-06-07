@@ -18,10 +18,10 @@ class Scaled
         int sensorPin3 = A12;
         int sensorPin4 = A11;
 
-        float range1 = 330 - 80;
-        float range2 = 816 - 200;
-        float range3 = 513 - 170;
-        float range4 = 870 - 185;
+        float range1 = 330 - 50;
+        float range2 = 816 - 120;
+        float range3 = 513 - 80;
+        float range4 = 870 - 160;
 
         int scaled1;
         int scaled2;
