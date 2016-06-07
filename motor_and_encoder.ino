@@ -1,6 +1,9 @@
+#include <Scaled.h>
+
 #include "DualVNH5019MotorShield.h" // from https://github.com/pololu/dual-vnh5019-motor-shield
 
 DualVNH5019MotorShield md;
+Scaled light;
 
 
 //PIN's definition
@@ -17,11 +20,12 @@ volatile boolean PastA2 = 0;
 volatile boolean PastB1 = 0;
 volatile boolean PastB2 = 0;
 
+float rawRange = 1024; // 3.3v          //conversion to lux - not important as of now
+float logRange = 5.0; // 3.3v = 10^5 lux 
+
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault();
   unsigned long counts;
-  encoder1Pos=0;
-  encoder2Pos=0;
   if(motor1Speed==0){  //when only right motor is moving
     counts = (long)(degs*55/36+(100-motor2Speed)*0.3);
     while(abs(encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
@@ -78,6 +82,7 @@ void testSpeeds(){ // find rotational Speed
   int dtheta1 = 0;
   int dtheta2 = 0;
   md.setSpeeds(100, 100);
+  stopIfFault();
   currentPos1 = abs(encoder1Pos);
   currentPos2 = abs(encoder2Pos);
   dtheta1 = currentPos1 - previousPos1;
@@ -90,8 +95,63 @@ void testSpeeds(){ // find rotational Speed
   previousPos2 = currentPos2;
 }
 
+
+void lineTrack(){
+  while(true){
+    int far_left=light.scale1();
+    int close_left=light.scale2();
+    int close_right=light.scale3();
+    int far_right=light.scale4();
+    int left_average=(far_left+close_left)/2;
+    int right_average=(far_right+close_right)/2;
+    stopIfFault();
+    int lightTarget=50;
+    int motor1Speed, motor2Speed;
+    float kp=2.5;
+    int baseSpeed=0;
+    int leftError, rightError;
+    leftError=left_average-lightTarget;
+    rightError=right_average-lightTarget;
+    motor1Speed= kp*leftError+baseSpeed;
+    motor2Speed= kp*rightError+baseSpeed;
+    md.setSpeeds(motor1Speed, motor2Speed);
+    light.print();
+  }
+}
+
+
+void lineTrack2(){
+  while(true){
+    int far_left=light.scale1();
+    int close_left=light.scale2();
+    int close_right=light.scale3();
+    int far_right=light.scale4();
+    int left_average=(1.5*far_left+close_left)/2;
+    int right_average=(1.5*far_right+close_right)/2;
+    stopIfFault();
+    int motor1Speed, motor2Speed;
+    float kp=2;
+    int baseSpeed=50;
+    int error;
+    error=left_average-right_average;
+    motor1Speed=baseSpeed+kp*error;
+    motor2Speed=baseSpeed-kp*error;
+    md.setSpeeds(motor1Speed, motor2Speed);
+    //Serial.println(error);
+  }
+}
+
+
 void setup() 
 {
+  pinMode(22, OUTPUT);      //power the sensors, which are connected to digital pins 22, 23, 24, 25
+  pinMode(23, OUTPUT);
+  pinMode(24, OUTPUT);
+  pinMode(25, OUTPUT);
+  digitalWrite(22, HIGH);
+  digitalWrite(23, HIGH);
+  digitalWrite(24, HIGH);
+  digitalWrite(25, HIGH);
   pinMode(encoder1PinA, INPUT);
   //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
@@ -121,10 +181,9 @@ void setup()
 
 void loop() 
 {
-  //moveDegs(100, 100, 500);
-  //moveDegs(100, 0, 300);
-  moveDegs(200, 200, 360);
-  delay(1000);
+  //md.setSpeeds(100,100);
+  lineTrack2();
+  //light.print();
 }
 
 //you may easily modify the code  get quadrature..
