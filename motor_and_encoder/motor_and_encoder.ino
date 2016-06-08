@@ -2,8 +2,16 @@
 
 #include "DualVNH5019MotorShield.h" // from https://github.com/pololu/dual-vnh5019-motor-shield
 
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_LSM303_U.h>
+
+
+Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
+
+
 
 
 #define encoder1PinA  18
@@ -129,7 +137,7 @@ int lastError = 0;
 float kp=1;
 float ki = 1;
 float integralFactor = 0.5;
-float kd = 100;
+float kd = 90;
 int baseSpeed=50;
 int motor1Speed, motor2Speed,error;
   
@@ -149,18 +157,48 @@ void lineTrack2(){
     integral = maxIntegral;
   }
   float turn = kp*error+ki*integral+kd*derivative;
-  float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
-  motor1Speed=variableSpeed + turn;
-  motor2Speed=variableSpeed - turn  ;
-  lastError = error;
-  md.setSpeeds(motor1Speed, motor2Speed);
-  //Serial.println(error);
+  float variableSpeed = 90/(1+pow(e,0.1*(abs(error)-15)));
+  if(left_average<45&&right_average<45){
+    md.setBrakes(400, 400);
+    //delay(300);
+  }else{
+    motor1Speed=variableSpeed + turn;
+    motor2Speed=variableSpeed - turn  ;
+    lastError = error;
+    md.setSpeeds(motor1Speed, motor2Speed);
+  }
+
+  /*Serial.print(left_average);
+  Serial.print(" ");
+  Serial.println(right_average);
+  delay(100);*/
+}
+
+float accelX()
+{
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.x;
+}
+float accelY()
+{
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.y;
+}
+float accelZ()
+{
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.z;
 }
 
 
 
 void setup() 
-{ pinMode(23,INPUT);
+{ pinMode(23,INPUT_PULLUP);
+
+ !accel.begin();
 
   pinMode(encoder1PinA, INPUT);
   //turn on pullup resistor
@@ -191,11 +229,30 @@ void setup()
 
 void loop() 
 {
-  
-  //md.setSpeeds(100,100);
+
+  /*if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
+  {
+  md.setSpeeds(45,45);
+  Serial.println("Flat");}
+  else
+  {
+    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
+    {md.setSpeeds(60,60);
+    Serial.println("Uphill");}
+    else
+    {md.setSpeeds(35,35);
+    Serial.println("Downhill");}
+  }
+  delay(500);*/
   //light.print();
-  
   lineTrack2();
+
+  //Serial.println((atan2(accelZ(),accelY()) * 180) / 3.1415926);
+  //Serial.print("  ");
+  //Serial.print(accelY());
+  //Serial.print("  ");
+  //Serial.println(accelZ());
+  
 }
 
 //you may easily modify the code  get quadrature..
