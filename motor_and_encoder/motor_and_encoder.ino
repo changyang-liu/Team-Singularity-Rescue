@@ -121,6 +121,7 @@ void lineTrack(){
   }
 }
 
+const float e = 2.71828;
 float integral = 0;
 int maxIntegral = 10000;
 int derivative = 0;
@@ -128,7 +129,7 @@ int lastError = 0;
 float kp=1;
 float ki = 1;
 float integralFactor = 0.5;
-float kd = 200;
+float kd = 100;
 int baseSpeed=50;
 int motor1Speed, motor2Speed,error;
   
@@ -148,8 +149,9 @@ void lineTrack2(){
     integral = maxIntegral;
   }
   float turn = kp*error+ki*integral+kd*derivative;
-  motor1Speed=baseSpeed + turn;
-  motor2Speed=baseSpeed - turn  ;
+  float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+  motor1Speed=variableSpeed + turn;
+  motor2Speed=variableSpeed - turn  ;
   lastError = error;
   md.setSpeeds(motor1Speed, motor2Speed);
   //Serial.println(error);
