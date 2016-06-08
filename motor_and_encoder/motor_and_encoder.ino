@@ -12,8 +12,6 @@ DualVNH5019MotorShield md;
 Scaled light;
 
 
-
-
 #define encoder1PinA  18
 #define encoder1PinB  19
 #define encoder2PinA  20
@@ -157,17 +155,40 @@ void lineTrack2(){
     integral = maxIntegral;
   }
   float turn = kp*error+ki*integral+kd*derivative;
-  float variableSpeed = 90/(1+pow(e,0.1*(abs(error)-15)));
-  if(left_average<45&&right_average<45){
+  float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+     motor1Speed=variableSpeed + turn;
+     motor2Speed=variableSpeed - turn  ;
+     lastError = error;
+     md.setSpeeds(motor1Speed, motor2Speed);
+  /*if(slope() == 0)
+    {if(left_average<45&&right_average<45)
+    {
     md.setBrakes(400, 400);
-    //delay(300);
-  }else{
-    motor1Speed=variableSpeed + turn;
-    motor2Speed=variableSpeed - turn  ;
-    lastError = error;
-    md.setSpeeds(motor1Speed, motor2Speed);
-  }
-
+    }
+    else{
+      motor1Speed=variableSpeed + turn;
+      motor2Speed=variableSpeed - turn  ;
+      lastError = error;
+      md.setSpeeds(motor1Speed, motor2Speed);
+      };
+    }
+   else
+   {
+    if(slope() == 1)
+     {
+      motor1Speed=variableSpeed*(80/90) + turn;
+      motor2Speed=variableSpeed*(80/90) - turn;
+      lastError = error;
+      md.setSpeeds(motor1Speed, motor2Speed);
+     }
+     else
+     {
+      motor1Speed=variableSpeed*(100/90) + turn;
+      motor2Speed=variableSpeed*(100/90) - turn  ;
+      lastError = error;
+      md.setSpeeds(motor1Speed, motor2Speed);
+     };
+   }*/
   /*Serial.print(left_average);
   Serial.print(" ");
   Serial.println(right_average);
@@ -195,8 +216,24 @@ float accelZ()
 
 
 
+int slope()
+{
+if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
+  {
+  return 0;}
+  else
+  {
+    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
+    {return 1;}
+    else
+    {return -1;}
+  }
+}
+
+
+
 void setup() 
-{ pinMode(23,INPUT_PULLUP);
+{ //pinMode(22,INPUT);
 
  !accel.begin();
 
@@ -230,22 +267,19 @@ void setup()
 void loop() 
 {
 
-  /*if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
-  {
-  md.setSpeeds(45,45);
-  Serial.println("Flat");}
+
+  
+
+
+if (digitalRead(22) == LOW)  
+  { lineTrack2();}
   else
-  {
-    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
-    {md.setSpeeds(60,60);
-    Serial.println("Uphill");}
-    else
-    {md.setSpeeds(35,35);
-    Serial.println("Downhill");}
-  }
-  delay(500);*/
-  //light.print();
-  lineTrack2();
+  { md.setBrakes(400,400);}
+  //Serial.println(slope());
+  
+
+ 
+ 
 
   //Serial.println((atan2(accelZ(),accelY()) * 180) / 3.1415926);
   //Serial.print("  ");
