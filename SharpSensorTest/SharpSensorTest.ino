@@ -1,7 +1,7 @@
-#include <SharpIR.h>
+//#include <SharpIR.h>
 #include <math.h>
 
-#define ir A2
+#define ir A15
 
 const double e =  2.71828;
 
@@ -45,6 +45,7 @@ void setup(){
   }
 
   Serial.println(overall/200);
+ 
 //  
 
 }
@@ -96,6 +97,7 @@ void loop(){
   }
 //  
   Serial.println(dist);
+   delay(500);
 }
 
 
