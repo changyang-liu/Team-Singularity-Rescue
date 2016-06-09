@@ -92,13 +92,13 @@ return scaled4;
 
 void Scaled::print()
 { Serial.print("Far left: ");
-Serial.print(log(analogRead(sensorPin1)));
+Serial.print(scale1());
 Serial.print(" Close left: ");
-Serial.print(log(analogRead(sensorPin2)));
+Serial.print(scale2());
 Serial.print(" Close right: ");
-Serial.print(log(analogRead(sensorPin3)));
+Serial.print(scale3());
 Serial.print(" Far right: ");
-Serial.println(log(analogRead(sensorPin4)));
+Serial.println(scale4());
 }
 
 

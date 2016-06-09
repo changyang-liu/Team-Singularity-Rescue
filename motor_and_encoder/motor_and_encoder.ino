@@ -26,10 +26,6 @@ volatile boolean PastB1 = 0;
 volatile boolean PastB2 = 0;
 
 
-
-
-
-
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault();
   unsigned long counts;
@@ -138,6 +134,40 @@ float integralFactor = 0.5;
 float kd = 90;
 int baseSpeed=50;
 int motor1Speed, motor2Speed,error;
+
+unsigned char Re_buf[11],counter=0;
+unsigned char sign=0;
+byte rgb[3]={0};
+byte lcc[3]={0};
+void SerialEvent() {
+  while (Serial2.available()) {   
+    Re_buf[counter]=(unsigned char)Serial2.read();
+    if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
+    counter++;       
+    if(counter==8)                //接收到数据
+    {    
+       counter=0;                 //重新赋值，准备下一帧数据的接收 
+       sign=1;
+    }      
+  }
+}
+
+void colourSensor (){
+  unsigned char i=0,sum=0;
+  SerialEvent();
+  if(sign){   
+      
+     sign=0;
+     for(i=0;i<7;i++){
+      sum+=Re_buf[i]; 
+      if(sum==Re_buf[i]){             
+          rgb[0]=Re_buf[4];
+          rgb[1]=Re_buf[5];
+          rgb[2]=Re_buf[6];     
+      }
+    }
+  }
+}
   
 void lineTrack2(){
   stopIfFault();
@@ -156,14 +186,20 @@ void lineTrack2(){
   }
   float turn = kp*error+ki*integral+kd*derivative;
   float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
-     motor1Speed=variableSpeed + turn;
-     motor2Speed=variableSpeed - turn  ;
-     lastError = error;
-     md.setSpeeds(motor1Speed, motor2Speed);
-  /*if(slope() == 0)                                                  //Increase or decrease speed according to the slope. 0 is flat, 1 is uphill and -1 is downhill. Currently removed as it causes jerkiness
-    {if(left_average<45&&right_average<45)
-    {
+  motor1Speed=variableSpeed + turn;
+  motor2Speed=variableSpeed - turn  ;
+  lastError = error;
+  colourSensor();
+  if(rgb[0]>=90 && rgb[0]<=130  && rgb[1]>=140 && rgb[1]<=180 && rgb[2]>=90 && rgb[2]<=130){
     md.setBrakes(400, 400);
+  }
+  else{
+    md.setSpeeds(motor1Speed, motor2Speed);
+  }
+  /*if(slope() == 0){                                                  //Increase or decrease speed according to the slope. 0 is flat, 1 is uphill and -1 is downhill. Currently removed as it causes jerkiness
+      if(left_average<45&&right_average<45){
+        md.setBrakes(400, 400);
+      }
     }
     else{
       motor1Speed=variableSpeed + turn;
@@ -172,22 +208,18 @@ void lineTrack2(){
       md.setSpeeds(motor1Speed, motor2Speed);
       };
     }
-   else
-   {
-    if(slope() == 1)
-     {
+    else if(slope() == 1){
       motor1Speed=variableSpeed*(80/90) + turn;
       motor2Speed=variableSpeed*(80/90) - turn;
       lastError = error;
       md.setSpeeds(motor1Speed, motor2Speed);
      }
-     else
-     {
+    else{
       motor1Speed=variableSpeed*(100/90) + turn;
       motor2Speed=variableSpeed*(100/90) - turn  ;
       lastError = error;
       md.setSpeeds(motor1Speed, motor2Speed);
-     };
+     }
    }*/
   /*Serial.print(left_average);
   Serial.print(" ");
@@ -195,20 +227,20 @@ void lineTrack2(){
   delay(100);*/
 }
 
-float accelX()                                 //Accelerometer readings on X, Y and Z axis.
-{
+void singleLeft(){
+  }
+
+float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
   sensors_event_t event; 
   accel.getEvent(&event);
   return event.acceleration.x;
 }
-float accelY()
-{
+float accelY(){
   sensors_event_t event; 
   accel.getEvent(&event);
   return event.acceleration.y;
 }
-float accelZ()
-{
+float accelZ(){
   sensors_event_t event; 
   accel.getEvent(&event);
   return event.acceleration.z;
@@ -216,8 +248,7 @@ float accelZ()
 
 
 
-int slope()                           //Function to detect uphill, downhill or flat
-{
+int slope(){                           //Function to detect uphill, downhill or flat
 if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
   {
   return 0;}
@@ -232,22 +263,16 @@ if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY
 
 
 
-void setup() 
-{ //pinMode(22,INPUT);
-
+void setup(){ 
+ //pinMode(22,INPUT);
  !accel.begin();
-
-  pinMode(encoder1PinA, INPUT);
-  //turn on pullup resistor
+  pinMode(encoder1PinA, INPUT); //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinA, INPUT);
-  //turn on pullup resistor
+  pinMode(encoder2PinA, INPUT); //turn on pullup resistor
   digitalWrite(encoder2PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder1PinB, INPUT); 
-  //turn on pullup resistor
+  pinMode(encoder1PinB, INPUT);  //turn on pullup resistor
   digitalWrite(encoder1PinB, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinB, INPUT); 
-  //turn on pullup resistor
+  pinMode(encoder2PinB, INPUT); //turn on pullup resistor
   digitalWrite(encoder2PinB, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
   PastA1 = (boolean)digitalRead(encoder1PinA); //initial value of channel A;
   PastA2 = (boolean)digitalRead(encoder2PinA); //initial value of channel A;
@@ -258,29 +283,38 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(encoder1PinA), doEncoderA1, RISING);
   attachInterrupt(digitalPinToInterrupt(encoder2PinA), doEncoderA2, RISING);
   attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE);  
-  Serial.begin(9600);
+  attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
+   
+  Serial.begin(115200);
+  Serial2.begin(9600);
+  delay(1);
+  Serial2.write(0XA5); 
+  Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
+  Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
   md.init();
 }
 
 
 void loop() 
 {
+ //light.print();
+ /*colourSensor();
+ Serial.print(rgb[0]);
+ Serial.print(" ");
+ Serial.print(rgb[1]);
+ Serial.print(" ");
+ Serial.println(rgb[2]);*/
 
-
-  
-
-
-if (digitalRead(22) == LOW)           //Front touch sensor
-  { lineTrack2();}
-  else
-  { md.setBrakes(400,400);}
-  //Serial.println(slope());
-  
-
+ lineTrack2();
  
  
 
+/*if (digitalRead(22) == LOW){ // touch sensor 
+    lineTrack2();
+  }
+  else{
+    md.setBrakes(400,400);
+  }*/
   //Serial.println((atan2(accelZ(),accelY()) * 180) / 3.1415926);
   //Serial.print("  ");
   //Serial.print(accelY());

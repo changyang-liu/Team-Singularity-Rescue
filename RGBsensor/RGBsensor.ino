@@ -12,17 +12,19 @@ unsigned char Re_buf[11],counter=0;
 unsigned char sign=0;
 byte rgb[3]={0};
 byte lcc[3]={0};
+
 void setup() {
-   Serial.begin(9600);  
+  Serial.begin(115200);
+  Serial2.begin(9600);  
   delay(1);    
-  Serial.write(0XA5); 
-  Serial.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
-  Serial.write(0X26);    //Sum of A5 and 81 (for verification)
+  Serial2.write(0XA5); 
+  Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
+  Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
 }
 
 void loop() {
   unsigned char i=0,sum=0;
-  
+  SerialEvent();
   if(sign)
   {   
      sign=0;
@@ -33,29 +35,29 @@ void loop() {
          /*lcc[0]=(Re_buf[4]<<8)|Re_buf[5];
          lcc[1]=(Re_buf[6]<<8)|Re_buf[7];
          lcc[2]=(Re_buf[8]<<8)|Re_buf[9];
-          Serial.print("Lux =");
-          Serial.print(lcc[0]);
-          Serial.print("CT =");
-          Serial.print(lcc[1]);
-          Serial.print("Color =");
-          Serial.println(lcc[2]);*/
+          Serial2.print("Lux =");
+          Serial2.print(lcc[0]);
+          Serial2.print("CT =");
+          Serial2.print(lcc[1]);
+          Serial2.print("Color =");
+          Serial2.println(lcc[2]);*/
           
           rgb[0]=Re_buf[4];
           rgb[1]=Re_buf[5];
           rgb[2]=Re_buf[6];
-           Serial.print("r:");
-           Serial.print( rgb[0]);
-           Serial.print(",g:");
-           Serial.print( rgb[1]);
-           Serial.print(",b:");
-           Serial.println( rgb[2]);
+          Serial.print("r:");
+          Serial.print( rgb[0]);
+          Serial.print(",g:");
+          Serial.print( rgb[1]);
+          Serial.print(",b:");
+          Serial.println( rgb[2]);
            
    }
   } 
 }
-void serialEvent() {
-  while (Serial.available()) {   
-    Re_buf[counter]=(unsigned char)Serial.read();
+void SerialEvent() {
+  while (Serial2.available()) {   
+    Re_buf[counter]=(unsigned char)Serial2.read();
     if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
     counter++;       
     if(counter==8)                //接收到数据
