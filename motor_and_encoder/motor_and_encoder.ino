@@ -98,31 +98,6 @@ void testSpeeds(){ // find rotational Speed
   previousPos2 = currentPos2;
 }
 
-
-void lineTrack(){
-  while(true){
-    int far_left=light.scale1();
-    int close_left=light.scale2();
-    int close_right=light.scale3();
-    int far_right=light.scale4();
-    int left_average=(far_left+close_left)/2;
-    int right_average=(far_right+close_right)/2;
-    stopIfFault();
-    int lightTarget=50;
-    int motor1Speed, motor2Speed;
-    float kp=2.5;
-    int baseSpeed=0;
-    int leftError, rightError;
-    
-    leftError=left_average-lightTarget;
-    rightError=right_average-lightTarget;
-    motor1Speed= kp*leftError+baseSpeed;
-    motor2Speed= kp*rightError+baseSpeed;
-    md.setSpeeds(motor1Speed, motor2Speed);
-    light.print();
-  }
-}
-
 const float e = 2.71828;
 float integral = 0;
 int maxIntegral = 10000;
@@ -132,9 +107,9 @@ float kp=1;
 float ki = 1;
 float integralFactor = 0.5;
 float kd = 90;
-int baseSpeed=50;
-int motor1Speed, motor2Speed,error;
-
+int baseSpeed=30;
+int motor1Speed, motor2Speed;
+float error;
 unsigned char Re_buf[11],counter=0;
 unsigned char sign=0;
 byte rgb[3]={0};
@@ -175,8 +150,8 @@ void lineTrack2(){
   int close_left=light.scale2();
   int close_right=light.scale3();
   int far_right=light.scale4();
-  int left_average=(far_left+close_left)/2;
-  int right_average=(far_right+close_right)/2;
+  float left_average=(far_left+close_left)/2;
+  float right_average=(far_right+close_right)/2;
 
   error=left_average-right_average;
   derivative = error-lastError;
@@ -189,9 +164,21 @@ void lineTrack2(){
   motor1Speed=variableSpeed + turn;
   motor2Speed=variableSpeed - turn  ;
   lastError = error;
-  colourSensor();
-  if(rgb[0]>=90 && rgb[0]<=130  && rgb[1]>=140 && rgb[1]<=180 && rgb[2]>=90 && rgb[2]<=130){
-    md.setBrakes(400, 400);
+
+  
+  //colourSensor();
+//  
+//  else{
+
+  if (left_average<45&&right_average<45) {
+    md.setBrakes(400,400);
+    delay(500);
+    if(rgb[0]>=90 && rgb[0]<=130  && rgb[1]>=140 && rgb[1]<=180 && rgb[2]>=90 && rgb[2]<=130){
+      singleTrack(1, 3);
+    }
+    else{
+      //moveTime(200);
+    }
   }
   else{
     md.setSpeeds(motor1Speed, motor2Speed);
@@ -227,8 +214,27 @@ void lineTrack2(){
   delay(100);*/
 }
 
-void singleLeft(){
+void singleTrack(int side, int p){
+  stopIfFault();
+  int close_left=light.scale2();
+  int close_right = light.scale3();
+  float turn;
+  if (side == 1) {
+    error = close_left-50;
+    turn = error*p;
+    float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+    motor1Speed = variableSpeed + turn;
+    motor2Speed = variableSpeed - turn;
+  } else if (side == 2) {
+    error = close_right-50;
+    turn = error*p;
+    float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+    motor1Speed = variableSpeed - turn;
+    motor2Speed = variableSpeed + turn;
   }
+
+  md.setSpeeds(motor1Speed,motor2Speed); 
+}
 
 float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
   sensors_event_t event; 
@@ -265,6 +271,7 @@ if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY
 
 void setup(){ 
  //pinMode(22,INPUT);
+ pinMode(24,INPUT);
  !accel.begin();
   pinMode(encoder1PinA, INPUT); //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
@@ -294,9 +301,34 @@ void setup(){
   md.init();
 }
 
+int state = LOW;
+int reading;
+boolean once = false;
 
+long time_passed = 0;
+long debounce = 200;
 void loop() 
 {
+
+  reading = digitalRead(24);
+  Serial.print("Reading: ");
+  Serial.print(reading);
+  Serial.print(" State: ");
+  Serial.println(state);
+
+  if (reading == LOW) {
+    time_passed = millis();
+    once = false;
+  } else {
+    if (millis() - time_passed > debounce && !once) {
+      if (state == HIGH) {
+        state = LOW;
+      } else {
+        state = HIGH;
+      }
+      once = true;
+    }
+  }
  //light.print();
  /*colourSensor();
  Serial.print(rgb[0]);
@@ -305,7 +337,14 @@ void loop()
  Serial.print(" ");
  Serial.println(rgb[2]);*/
 
- lineTrack2();
+ //singleTrack(2,3);
+ if (state) {
+  lineTrack2();
+ } else {
+  md.setBrakes(400,400);
+ }
+ 
+ //md.setSpeeds(70,70);
  
  
 
