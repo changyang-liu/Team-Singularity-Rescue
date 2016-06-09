@@ -160,7 +160,7 @@ void lineTrack2(){
      motor2Speed=variableSpeed - turn  ;
      lastError = error;
      md.setSpeeds(motor1Speed, motor2Speed);
-  /*if(slope() == 0)
+  /*if(slope() == 0)                                                  //Increase or decrease speed according to the slope. 0 is flat, 1 is uphill and -1 is downhill. Currently removed as it causes jerkiness
     {if(left_average<45&&right_average<45)
     {
     md.setBrakes(400, 400);
@@ -195,7 +195,7 @@ void lineTrack2(){
   delay(100);*/
 }
 
-float accelX()
+float accelX()                                 //Accelerometer readings on X, Y and Z axis.
 {
   sensors_event_t event; 
   accel.getEvent(&event);
@@ -216,7 +216,7 @@ float accelZ()
 
 
 
-int slope()
+int slope()                           //Function to detect uphill, downhill or flat
 {
 if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
   {
@@ -271,7 +271,7 @@ void loop()
   
 
 
-if (digitalRead(22) == LOW)  
+if (digitalRead(22) == LOW)           //Front touch sensor
   { lineTrack2();}
   else
   { md.setBrakes(400,400);}
