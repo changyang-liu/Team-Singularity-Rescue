@@ -103,10 +103,10 @@ float integral = 0;
 int maxIntegral = 10000;
 int derivative = 0;
 int lastError = 0;
-float kp=1.5;
-float ki = 1.2;
+float kp= 1.8;
+float ki = 1;
 float integralFactor = 0.5;
-float kd = 90;
+float kd = 75;
 int baseSpeed=30;
 int motor1Speed, motor2Speed;
 float error;
@@ -160,7 +160,7 @@ void lineTrack2(){
     integral = maxIntegral;
   }
   float turn = kp*error+ki*integral+kd*derivative;
-  float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+  float variableSpeed = 80/(1+pow(e,0.15*(abs(error)-15)));
   motor1Speed=variableSpeed + turn;
   motor2Speed=variableSpeed - turn  ;
   lastError = error;
@@ -172,11 +172,15 @@ void lineTrack2(){
 //&& abs(rgb[0]-rgb[1])>=15 && abs(rgb[2]-rgb[1])>20
   if (left_average<45&&right_average<45) {
     md.setBrakes(400,400);
-    if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=80 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>15 && abs(rgb[1] - rgb[2])>20){
+    delay(200);
+    //if(slope() == -1){
+    //if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=15){
+    if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
       digitalWrite(25, HIGH);
-      moveTime(-50,80,900);
-      
-      //singleTrack(1, 3, 1000);
+      //moveTime(-50,80,900);
+      moveTime(-100, -100, 200);
+      singleTrack(1, 3, 1200);
+      digitalWrite(25, LOW);
     } else{
       digitalWrite(25, LOW);
       //if (left_average>right_average)
@@ -228,18 +232,18 @@ void lineTrack2(){
 
 void singleTrack(int side, int p, int t){
   stopIfFault();
-  int startTime = millis();
+  long startTime = millis();
   while (millis() - startTime < t) {
     int close_left=light.scale2();
     int close_right = light.scale3();
     float turn;
     if (side == 1) {
-      error = close_left-70;
+      error = close_left-50;
       turn = error*p;
       motor1Speed = baseSpeed + turn;
       motor2Speed = baseSpeed - turn;
     } else if (side == 2) {
-      error = close_right-50;
+      error = close_right-25;
       turn = error*p;
       float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
       motor1Speed = variableSpeed - turn;
@@ -283,12 +287,19 @@ if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY
 
 void color()
 {
-    colourSensor();
   Serial.print(rgb[0]);
   Serial.print(" ");
   Serial.print(rgb[1]);
   Serial.print(" ");
-  Serial.println(rgb[2]);
+  Serial.print(rgb[2]);
+  //if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=15){
+  if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
+    Serial.print(" ");
+    Serial.println("green");
+  }
+  else{
+    Serial.println(" ");
+  }
 }
 
 
@@ -316,7 +327,7 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
    
-  Serial.begin(115200);
+  Serial.begin(19200);
   Serial2.begin(9600);
   delay(1);
   Serial2.write(0XA5); 
@@ -330,7 +341,7 @@ int reading;
 boolean once = false;
 
 long time_passed = 0;
-long debounce = 200;
+long debounce = 100;
 void loop() 
 {
 
@@ -350,7 +361,9 @@ void loop()
     }
   }
 
-  //light.print();
+  light.printlog();
+  
+  //delay(1);
   if (state) {
     colourSensor();
     lineTrack2();
@@ -358,9 +371,9 @@ void loop()
   } else {
     md.setBrakes(400,400);
   }
- 
-//color();
 
+  //color();
+//Serial.println(slope());
 
  //singleTrack(2,3);
 
