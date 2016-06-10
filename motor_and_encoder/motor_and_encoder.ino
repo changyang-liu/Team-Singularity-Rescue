@@ -169,13 +169,26 @@ void lineTrack2(){
   //colourSensor();
 //  
 //  else{
-
-  if (left_average<45&&right_average<45) {
+//&& abs(rgb[0]-rgb[1])>=15 && abs(rgb[2]-rgb[1])>20
+  if (left_average<40&&right_average<40) {
     md.setBrakes(400,400);
-    if(rgb[0]>=100 && rgb[0]<=150  && rgb[1]>=140 && rgb[1]<=200 && rgb[2]>=90 && rgb[2]<=150){
-      moveTime(-80,-80,300);
-      singleTrack(1, 3, 1000);
+    if(rgb[0]>=90 && rgb[0]<=230  && rgb[1]>=120 && rgb[1]<=240 && rgb[2]>=80 && rgb[2]<=220 && (rgb[1] - rgb[0])>15 && (rgb[1] - rgb[2])>20){
+      digitalWrite(25, HIGH);
+      moveTime(-40,100, 500);
+      digitalWrite(25, LOW);
+      //singleTrack(1, 3, 1000);
     } else{
+      
+      /*if (left_average>right_average)
+      { 
+        
+        //moveTime(100,-50,200); 
+      }
+      else
+      { 
+        digitalWrite(25,LOW);
+        //moveTime(-50,100,200); 
+      }*/
       
     }
   }
@@ -273,6 +286,7 @@ if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY
 void setup(){ 
  //pinMode(22,INPUT);
  pinMode(24,INPUT);
+ pinMode(25,OUTPUT);
  !accel.begin();
   pinMode(encoder1PinA, INPUT); //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
@@ -337,12 +351,12 @@ void loop()
   }
  
 
-//  colourSensor();
-//  Serial.print(rgb[0]);
-//  Serial.print(" ");
-//  Serial.print(rgb[1]);
-//  Serial.print(" ");
-//  Serial.println(rgb[2]);
+  //colourSensor();
+  //Serial.print(rgb[0]);
+  //Serial.print(" ");
+  //Serial.print(rgb[1]);
+  //Serial.print(" ");
+  //Serial.println(rgb[2]);
 
  //singleTrack(2,3);
 
