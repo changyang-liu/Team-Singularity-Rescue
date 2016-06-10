@@ -172,12 +172,11 @@ void lineTrack2(){
 
   if (left_average<45&&right_average<45) {
     md.setBrakes(400,400);
-    delay(500);
-    if(rgb[0]>=90 && rgb[0]<=130  && rgb[1]>=140 && rgb[1]<=180 && rgb[2]>=90 && rgb[2]<=130){
-      singleTrack(1, 3);
-    }
-    else{
-      //moveTime(200);
+    if(rgb[0]>=100 && rgb[0]<=150  && rgb[1]>=140 && rgb[1]<=200 && rgb[2]>=90 && rgb[2]<=150){
+      moveTime(-80,-80,300);
+      singleTrack(1, 3, 1000);
+    } else{
+      
     }
   }
   else{
@@ -214,26 +213,28 @@ void lineTrack2(){
   delay(100);*/
 }
 
-void singleTrack(int side, int p){
+void singleTrack(int side, int p, int t){
   stopIfFault();
-  int close_left=light.scale2();
-  int close_right = light.scale3();
-  float turn;
-  if (side == 1) {
-    error = close_left-50;
-    turn = error*p;
-    float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
-    motor1Speed = variableSpeed + turn;
-    motor2Speed = variableSpeed - turn;
-  } else if (side == 2) {
-    error = close_right-50;
-    turn = error*p;
-    float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
-    motor1Speed = variableSpeed - turn;
-    motor2Speed = variableSpeed + turn;
-  }
-
-  md.setSpeeds(motor1Speed,motor2Speed); 
+  int startTime = millis();
+  while (millis() - startTime < t) {
+    int close_left=light.scale2();
+    int close_right = light.scale3();
+    float turn;
+    if (side == 1) {
+      error = close_left-70;
+      turn = error*p;
+      motor1Speed = baseSpeed + turn;
+      motor2Speed = baseSpeed - turn;
+    } else if (side == 2) {
+      error = close_right-50;
+      turn = error*p;
+      float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
+      motor1Speed = variableSpeed - turn;
+      motor2Speed = variableSpeed + turn;
+    }
+  
+    md.setSpeeds(motor1Speed,motor2Speed);
+  } 
 }
 
 float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
@@ -311,10 +312,6 @@ void loop()
 {
 
   reading = digitalRead(24);
-  Serial.print("Reading: ");
-  Serial.print(reading);
-  Serial.print(" State: ");
-  Serial.println(state);
 
   if (reading == LOW) {
     time_passed = millis();
@@ -329,21 +326,26 @@ void loop()
       once = true;
     }
   }
- //light.print();
- /*colourSensor();
- Serial.print(rgb[0]);
- Serial.print(" ");
- Serial.print(rgb[1]);
- Serial.print(" ");
- Serial.println(rgb[2]);*/
+
+  //light.print();
+  if (state) {
+    colourSensor();
+    lineTrack2();
+  //singleTrack(1,3);
+  } else {
+    md.setBrakes(400,400);
+  }
+ 
+
+//  colourSensor();
+//  Serial.print(rgb[0]);
+//  Serial.print(" ");
+//  Serial.print(rgb[1]);
+//  Serial.print(" ");
+//  Serial.println(rgb[2]);
 
  //singleTrack(2,3);
- if (state) {
-  lineTrack2();
- } else {
-  md.setBrakes(400,400);
- }
- 
+
  //md.setSpeeds(70,70);
  
  

@@ -27,7 +27,7 @@ class Scaled
 	float range1 = 6.45 - 4.75;
 	float range2 = 6.79 - 5.23;
 	float range3 = 6.26 - 4.44;
-	float range4 = 6.76 - 4.72;
+	float range4 = 6.42 - 4.72;
 
 
         int scaled1;
