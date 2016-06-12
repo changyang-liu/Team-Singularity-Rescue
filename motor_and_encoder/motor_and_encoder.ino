@@ -98,18 +98,7 @@ void testSpeeds(){ // find rotational Speed
   previousPos2 = currentPos2;
 }
 
-const float e = 2.71828;
-float integral = 0;
-int maxIntegral = 10000;
-int derivative = 0;
-int lastError = 0;
-float kp= 1.8;
-float ki = 1;
-float integralFactor = 0.5;
-float kd = 75;
-int baseSpeed=30;
-int motor1Speed, motor2Speed;
-float error;
+
 unsigned char Re_buf[11],counter=0;
 unsigned char sign=0;
 byte rgb[3]={0};
@@ -143,61 +132,40 @@ void colourSensor (){
     }
   }
 }
+
+int far_left;
+int close_left;
+int close_right;
+int far_right;
+float left_average;
+float right_average;
+const float e = 2.71828;
+float integral = 0;
+int maxIntegral = 10000;
+int derivative = 0;
+int lastError = 0;
+float kp= 2.2;
+float ki = 0.08;
+float integralFactor = 0.9;
+float kd = 70;
+int baseSpeed=30;
+int motor1Speed, motor2Speed;
+float error;
   
 void lineTrack2(){
-  stopIfFault();
-  int far_left=light.scale1();
-  int close_left=light.scale2();
-  int close_right=light.scale3();
-  int far_right=light.scale4();
-  float left_average=(far_left+close_left)/2;
-  float right_average=(far_right+close_right)/2;
-
   error=left_average-right_average;
   derivative = error-lastError;
   integral = integral*integralFactor + error;
   if (abs(integral) >= maxIntegral) {
     integral = maxIntegral;
   }
-  float turn = kp*error+ki*integral+kd*derivative;
-  float variableSpeed = 80/(1+pow(e,0.15*(abs(error)-15)));
+  float variableSpeed = 105/(1+pow(e,0.05*(abs(error)-15)));
+  float turn = kp*error+ki*integral+variableSpeed*1.4*derivative;
+
   motor1Speed=variableSpeed + turn;
   motor2Speed=variableSpeed - turn  ;
   lastError = error;
-
-  
-  //colourSensor();
-//  
-//  else{
-//&& abs(rgb[0]-rgb[1])>=15 && abs(rgb[2]-rgb[1])>20
-  if (left_average<45&&right_average<45) {
-    md.setBrakes(400,400);
-    delay(200);
-    //if(slope() == -1){
-    //if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=15){
-    if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
-      digitalWrite(25, HIGH);
-      //moveTime(-50,80,900);
-      moveTime(-100, -100, 200);
-      singleTrack(1, 3, 1200);
-      digitalWrite(25, LOW);
-    } else{
-      digitalWrite(25, LOW);
-      //if (left_average>right_average)
-     // { 
-        
-        //moveTime(80,-50,100); 
-      //}
-      //else
-      //{ 
-      
-       // moveTime(-50,80,100); 
-      //}
-      
-    }
-  }
-  else{
-    md.setSpeeds(motor1Speed, motor2Speed);
+  md.setSpeeds(motor1Speed, motor2Speed);
   }
   /*if(slope() == 0){                                                  //Increase or decrease speed according to the slope. 0 is flat, 1 is uphill and -1 is downhill. Currently removed as it causes jerkiness
       if(left_average<45&&right_average<45){
@@ -228,7 +196,7 @@ void lineTrack2(){
   Serial.print(" ");
   Serial.println(right_average);
   delay(100);*/
-}
+//}
 
 void singleTrack(int side, int p, int t){
   stopIfFault();
@@ -292,8 +260,8 @@ void color()
   Serial.print(rgb[1]);
   Serial.print(" ");
   Serial.print(rgb[2]);
-  //if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=15){
-  if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
+  if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
+  //if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
     Serial.print(" ");
     Serial.println("green");
   }
@@ -307,6 +275,7 @@ void setup(){
  //pinMode(22,INPUT);
  pinMode(24,INPUT);
  pinMode(25,OUTPUT);
+ pinMode(26, INPUT);
  !accel.begin();
   pinMode(encoder1PinA, INPUT); //turn on pullup resistor
   digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
@@ -342,9 +311,17 @@ boolean once = false;
 
 long time_passed = 0;
 long debounce = 100;
+
+
 void loop() 
 {
-
+  far_left=light.scale1();
+  close_left=light.scale2();
+  close_right=light.scale3();
+  far_right=light.scale4();
+  left_average=(far_left+close_left)/2;
+  right_average=(far_right+close_right)/2;
+  stopIfFault();
   reading = digitalRead(24);
 
   if (reading == LOW) {
@@ -361,17 +338,33 @@ void loop()
     }
   }
 
-  light.printlog();
-  
-  //delay(1);
+   //light.print();
+ //delay(1);
+ 
   if (state) {
-    colourSensor();
-    lineTrack2();
+    if (left_average<50&&right_average<50) {
+      md.setBrakes(400,400);
+      colourSensor();
+      delay(200);
+      //if(slope() == -1){
+      if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
+      //if(rgb[0]<180 && rgb[1]<180 && rgb[2]<150){
+      digitalWrite(25, HIGH);
+      //moveTime(-50,80,900);
+      moveTime(-100, -100, 200);
+      singleTrack(1, 4, 1200);
+      digitalWrite(25, LOW);
+      } else{
+      digitalWrite(25, LOW);
+      }
+    }else{
+      lineTrack2();
+    }
   //singleTrack(1,3);
-  } else {
+  }else{
     md.setBrakes(400,400);
   }
-
+  //colourSensor();
   //color();
 //Serial.println(slope());
 
@@ -393,6 +386,7 @@ void loop()
   //Serial.print("  ");
   //Serial.println(accelZ());
   
+  //Serial.println(digitalRead(26));
 }
 
 //you may easily modify the code  get quadrature..
