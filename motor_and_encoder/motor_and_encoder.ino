@@ -1,30 +1,305 @@
 #include <Scaled.h>
-
 #include "DualVNH5019MotorShield.h" // from https://github.com/pololu/dual-vnh5019-motor-shield
-
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 
+#define encoder1PinA  18
+#define encoder1PinB  19
+#define encoder2PinA  20
+#define encoder2PinB  21
+
+int buttonPin = 24, ledPin = 25, touchSensorPin = 26, foilPin = 27;
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 
+const float e = 2.71828;
 
-#define encoder1PinA  18
-#define encoder1PinB  19
-#define encoder2PinA  20
-#define encoder2PinB  21   
+//Encoder
+volatile long encoder1Pos = 0, encoder2Pos = 0;
+volatile boolean PastA1 = 0, PastA2 = 0, PastB1 = 0, PastB2 = 0;
+
+//Colour
+unsigned char Re_buf[11], counter = 0;
+unsigned char sign = 0;
+byte rgb[3] = {0}, rgb2[3] = {0};
+
+//Button
+int state = LOW, reading;
+boolean once = false;
+long time_passed = 0, debounce = 100;
+
+//Line tracks
+int far_left, close_left, close_right, far_right;
+float left_average, right_average, error, turn;
+float integral = 0, derivative = 0, lastError = 0;
+
+float kp= 2.2;
+float ki = 0.08;
+float kd = 70;
+
+int maxIntegral = 10000;
+float integralFactor = 0.9;
+
+int motor1Speed, motor2Speed;
+int originalSpeed = 30, baseSpeed = originalSpeed;
+
+void setup(){ 
+  pinMode(buttonPin,INPUT);
+  pinMode(touchSensorPin, INPUT_PULLUP);
+  pinMode(foilPin, INPUT);
+
+  pinMode(ledPin,OUTPUT);
+  
+  !accel.begin();
+  
+  pinMode(encoder1PinA, INPUT); //turn on pullup resistor
+  digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
+  pinMode(encoder2PinA, INPUT);
+  digitalWrite(encoder2PinA, HIGH); 
+  pinMode(encoder1PinB, INPUT);
+  digitalWrite(encoder1PinB, HIGH);
+  pinMode(encoder2PinB, INPUT);
+  digitalWrite(encoder2PinB, HIGH);
+  
+  PastA1 = (boolean)digitalRead(encoder1PinA); //initial value of channel A;
+  PastA2 = (boolean)digitalRead(encoder2PinA); //initial value of channel A;
+  PastB1 = (boolean)digitalRead(encoder1PinB); //and channel B
+  PastB2 = (boolean)digitalRead(encoder2PinB); //and channel B
+
+//To Speed up even more, you may define manually the ISRs
+  attachInterrupt(digitalPinToInterrupt(encoder1PinA), doEncoderA1, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoder2PinA), doEncoderA2, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
+   
+  Serial.begin(19200);
+  Serial2.begin(9600);
+  delay(1);
+  Serial2.write(0XA5); 
+  Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
+  Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
+  md.init();
+}
 
 
-volatile long encoder1Pos = 0;
-volatile long encoder2Pos = 0;
-volatile boolean PastA1 = 0;
-volatile boolean PastA2 = 0;
-volatile boolean PastB1 = 0;
-volatile boolean PastB2 = 0;
 
+void loop() 
+{
+  stopIfFault();
+
+  reading = digitalRead(buttonPin);
+  Serial.println(state);
+
+  if (reading == LOW) {
+    time_passed = millis();
+    once = false;
+  } else {
+    if (millis() - time_passed > debounce && !once) {
+      if (state == HIGH) {
+        state = LOW;
+      } else {
+        state = HIGH;
+      }
+      once = true;
+    }
+  }
+  
+  
+  far_left = light.scale1();
+  close_left = light.scale2();
+  close_right = light.scale3();
+  far_right = light.scale4();
+  
+  left_average = (far_left + close_left)/2;
+  right_average = (far_right + close_right)/2;
+ 
+  if (state) {
+    if (digitalRead(foilPin) == HIGH) {
+      //do rescue zone
+    } else if (digitalRead(touchSensorPin) == LOW) {
+      //do obstacle
+    } else if (left_average < 50 && right_average < 50) {  //double black
+      md.setBrakes(400,400);
+      colourSensor();
+      colourSensor2();
+      delay(200);
+      
+      if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
+        digitalWrite(ledPin, HIGH);
+        if (slope() == -1) {  //downward slope
+          moveTime(-150,-150, 200);
+          singleTrack(1, 20, 4, 1200);
+        } else {  //level ground
+          moveTime(-100, -100, 200);
+          singleTrack(1, 30, 4, 1200);
+        }
+        digitalWrite(ledPin,LOW);
+      } else {
+        digitalWrite(ledPin, LOW);
+      }
+    } else {
+      lineTrack2();
+    }
+  }else{
+    md.setBrakes(400,400);
+  }
+}
+
+void lineTrack2(){
+  error = left_average - right_average;
+  integral = integral*integralFactor + error;
+  derivative = error - lastError;
+  
+  if (abs(integral) >= maxIntegral) {
+    integral = maxIntegral;
+  }
+  
+  float variableSpeed = 105/(1+pow(e,0.05*(abs(error)-15)));
+  turn = kp*error+ki*integral+variableSpeed*1.4*derivative;
+
+  motor1Speed = variableSpeed + turn;
+  motor2Speed = variableSpeed - turn  ;
+  
+  lastError = error;
+  
+  md.setSpeeds(motor1Speed, motor2Speed);
+}
+
+void singleTrack(int side, int base, int p, int t){
+  long startTime = millis();
+  
+  while (millis() - startTime < t) {
+    int close_left=light.scale2();
+    int close_right = light.scale3();
+    
+    if (side == 1) {
+      error = close_left-50;
+      turn = error*p;
+      motor1Speed = base + turn;
+      motor2Speed = base - turn;
+    
+    } else if (side == 2) {
+      error = close_right-50;
+      turn = error*p;
+      motor1Speed = base - turn;
+      motor2Speed = base + turn;
+    }
+    md.setSpeeds(motor1Speed,motor2Speed);
+  } 
+}
+
+void color()
+{
+  Serial.print(rgb[0]);
+  Serial.print(" ");
+  Serial.print(rgb[1]);
+  Serial.print(" ");
+  Serial.print(rgb[2]);
+  if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
+  //if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
+    Serial.print(" ");
+    Serial.println("green");
+  }
+  else{
+    Serial.println(" ");
+  }
+}
+
+void SerialEvent() {
+  while (Serial2.available()) {   
+    Re_buf[counter] = (unsigned char)Serial2.read();
+    
+    if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
+    counter++;       
+    
+    if(counter==8) {                //接收到数据
+       counter=0;                 //重新赋值，准备下一帧数据的接收 
+       sign=1;
+    }      
+  }
+}
+
+void SerialEvent2() {
+  while (Serial3.available()) {   
+    Re_buf[counter]=(unsigned char)Serial3.read();
+    if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
+    counter++;       
+    if(counter==8)                //接收到数据
+    {    
+       counter=0;                 //重新赋值，准备下一帧数据的接收 
+       sign=1;
+    }      
+  }
+}
+
+void colourSensor () {
+  unsigned char i=0,sum=0;
+  SerialEvent();
+  if(sign){   
+     sign=0;
+     
+     for(i=0;i<7;i++){
+      sum+=Re_buf[i]; 
+      
+      if(sum==Re_buf[i]){             
+          rgb[0]=Re_buf[4];
+          rgb[1]=Re_buf[5];
+          rgb[2]=Re_buf[6];     
+      }
+    }
+  }
+}
+
+void colourSensor2 (){
+  unsigned char i=0,sum=0;
+  SerialEvent2();
+  if(sign){   
+      
+     sign=0;
+     for(i=0;i<7;i++){
+      sum+=Re_buf[i]; 
+      if(sum==Re_buf[i]){             
+          rgb2[0]=Re_buf[4];
+          rgb2[1]=Re_buf[5];
+          rgb2[2]=Re_buf[6];  
+      }
+     }
+  }
+}
+
+float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.x;
+}
+
+float accelY(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.y;
+}
+
+float accelZ(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.z;
+}
+
+int slope(){                           //Function to detect uphill, downhill or flat
+if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
+  {
+  return 0;}
+  else
+  {
+    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
+    {return 1;}
+    else
+    {return -1;}
+  }
+}
 
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   stopIfFault();
@@ -49,7 +324,7 @@ void moveDegs(int motor1Speed, int motor2Speed, int degs){
   encoder2Pos=0;
 }
 
-void moveTime(int motor1Speed, int motor2Speed, long t){ //milliseconds
+void moveTime(int motor1Speed, int motor2Speed, long t){
   long elapsedtime=0;
   stopIfFault();
   long starttime=millis();
@@ -60,8 +335,6 @@ void moveTime(int motor1Speed, int motor2Speed, long t){ //milliseconds
    } 
   md.setBrakes(400, 400);
  }
-
-
 
 void stopIfFault()
 {
@@ -84,8 +357,11 @@ void testSpeeds(){ // find rotational Speed
   long previousPos2 = 0; 
   int dtheta1 = 0;
   int dtheta2 = 0;
+  
   md.setSpeeds(100, 100);
+  
   stopIfFault();
+  
   currentPos1 = abs(encoder1Pos);
   currentPos2 = abs(encoder2Pos);
   dtheta1 = currentPos1 - previousPos1;
@@ -98,316 +374,19 @@ void testSpeeds(){ // find rotational Speed
   previousPos2 = currentPos2;
 }
 
+void doEncoderA1(){
+  PastB1 ? encoder1Pos--:  encoder1Pos++;
+}
+void doEncoderA2(){
 
-unsigned char Re_buf[11],counter=0;
-unsigned char sign=0;
-byte rgb[3]={0};
-byte lcc[3]={0};
-void SerialEvent() {
-  while (Serial2.available()) {   
-    Re_buf[counter]=(unsigned char)Serial2.read();
-    if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
-    counter++;       
-    if(counter==8)                //接收到数据
-    {    
-       counter=0;                 //重新赋值，准备下一帧数据的接收 
-       sign=1;
-    }      
-  }
+  PastB2 ? encoder2Pos--:  encoder2Pos++;
 }
 
-void colourSensor (){
-  unsigned char i=0,sum=0;
-  SerialEvent();
-  if(sign){   
-      
-     sign=0;
-     for(i=0;i<7;i++){
-      sum+=Re_buf[i]; 
-      if(sum==Re_buf[i]){             
-          rgb[0]=Re_buf[4];
-          rgb[1]=Re_buf[5];
-          rgb[2]=Re_buf[6];     
-      }
-    }
-  }
+void doEncoderB1(){
+  PastB1 = !PastB1; 
 }
 
-int far_left;
-int close_left;
-int close_right;
-int far_right;
-float left_average;
-float right_average;
-const float e = 2.71828;
-float integral = 0;
-int maxIntegral = 10000;
-int derivative = 0;
-int lastError = 0;
-float kp= 2.2;
-float ki = 0.08;
-float integralFactor = 0.9;
-float kd = 70;
-int baseSpeed=30;
-int motor1Speed, motor2Speed;
-float error;
-  
-void lineTrack2(){
-  error=left_average-right_average;
-  derivative = error-lastError;
-  integral = integral*integralFactor + error;
-  if (abs(integral) >= maxIntegral) {
-    integral = maxIntegral;
-  }
-  float variableSpeed = 105/(1+pow(e,0.05*(abs(error)-15)));
-  float turn = kp*error+ki*integral+variableSpeed*1.4*derivative;
-
-  motor1Speed=variableSpeed + turn;
-  motor2Speed=variableSpeed - turn  ;
-  lastError = error;
-  md.setSpeeds(motor1Speed, motor2Speed);
-  }
-  /*if(slope() == 0){                                                  //Increase or decrease speed according to the slope. 0 is flat, 1 is uphill and -1 is downhill. Currently removed as it causes jerkiness
-      if(left_average<45&&right_average<45){
-        md.setBrakes(400, 400);
-      }
-    }
-    else{
-      motor1Speed=variableSpeed + turn;
-      motor2Speed=variableSpeed - turn  ;
-      lastError = error;
-      md.setSpeeds(motor1Speed, motor2Speed);
-      };
-    }
-    else if(slope() == 1){
-      motor1Speed=variableSpeed*(80/90) + turn;
-      motor2Speed=variableSpeed*(80/90) - turn;
-      lastError = error;
-      md.setSpeeds(motor1Speed, motor2Speed);
-     }
-    else{
-      motor1Speed=variableSpeed*(100/90) + turn;
-      motor2Speed=variableSpeed*(100/90) - turn  ;
-      lastError = error;
-      md.setSpeeds(motor1Speed, motor2Speed);
-     }
-   }*/
-  /*Serial.print(left_average);
-  Serial.print(" ");
-  Serial.println(right_average);
-  delay(100);*/
-//}
-
-void singleTrack(int side, int p, int t){
-  stopIfFault();
-  long startTime = millis();
-  while (millis() - startTime < t) {
-    int close_left=light.scale2();
-    int close_right = light.scale3();
-    float turn;
-    if (side == 1) {
-      error = close_left-50;
-      turn = error*p;
-      motor1Speed = baseSpeed + turn;
-      motor2Speed = baseSpeed - turn;
-    } else if (side == 2) {
-      error = close_right-25;
-      turn = error*p;
-      float variableSpeed = 90/(1+pow(e,0.15*(abs(error)-15)));
-      motor1Speed = variableSpeed - turn;
-      motor2Speed = variableSpeed + turn;
-    }
-  
-    md.setSpeeds(motor1Speed,motor2Speed);
-  } 
-}
-
-float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.x;
-}
-float accelY(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.y;
-}
-float accelZ(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.z;
-}
-
-
-
-int slope(){                           //Function to detect uphill, downhill or flat
-if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
-  {
-  return 0;}
-  else
-  {
-    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
-    {return 1;}
-    else
-    {return -1;}
-  }
-}
-
-void color()
-{
-  Serial.print(rgb[0]);
-  Serial.print(" ");
-  Serial.print(rgb[1]);
-  Serial.print(" ");
-  Serial.print(rgb[2]);
-  if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
-  //if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
-    Serial.print(" ");
-    Serial.println("green");
-  }
-  else{
-    Serial.println(" ");
-  }
-}
-
-
-void setup(){ 
- //pinMode(22,INPUT);
- pinMode(24,INPUT);
- pinMode(25,OUTPUT);
- pinMode(26, INPUT);
- !accel.begin();
-  pinMode(encoder1PinA, INPUT); //turn on pullup resistor
-  digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinA, INPUT); //turn on pullup resistor
-  digitalWrite(encoder2PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder1PinB, INPUT);  //turn on pullup resistor
-  digitalWrite(encoder1PinB, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinB, INPUT); //turn on pullup resistor
-  digitalWrite(encoder2PinB, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  PastA1 = (boolean)digitalRead(encoder1PinA); //initial value of channel A;
-  PastA2 = (boolean)digitalRead(encoder2PinA); //initial value of channel A;
-  PastB1 = (boolean)digitalRead(encoder1PinB); //and channel B
-  PastB2 = (boolean)digitalRead(encoder2PinB); //and channel B
-
-//To Speed up even more, you may define manually the ISRs
-  attachInterrupt(digitalPinToInterrupt(encoder1PinA), doEncoderA1, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoder2PinA), doEncoderA2, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
-   
-  Serial.begin(19200);
-  Serial2.begin(9600);
-  delay(1);
-  Serial2.write(0XA5); 
-  Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
-  Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
-  md.init();
-}
-
-int state = LOW;
-int reading;
-boolean once = false;
-
-long time_passed = 0;
-long debounce = 100;
-
-
-void loop() 
-{
-  far_left=light.scale1();
-  close_left=light.scale2();
-  close_right=light.scale3();
-  far_right=light.scale4();
-  left_average=(far_left+close_left)/2;
-  right_average=(far_right+close_right)/2;
-  stopIfFault();
-  reading = digitalRead(24);
-
-  if (reading == LOW) {
-    time_passed = millis();
-    once = false;
-  } else {
-    if (millis() - time_passed > debounce && !once) {
-      if (state == HIGH) {
-        state = LOW;
-      } else {
-        state = HIGH;
-      }
-      once = true;
-    }
-  }
-
-   //light.print();
- //delay(1);
- 
-  if (state) {
-    if (left_average<50&&right_average<50) {
-      md.setBrakes(400,400);
-      colourSensor();
-      delay(200);
-      //if(slope() == -1){
-      if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
-      //if(rgb[0]<180 && rgb[1]<180 && rgb[2]<150){
-      digitalWrite(25, HIGH);
-      //moveTime(-50,80,900);
-      moveTime(-100, -100, 200);
-      singleTrack(1, 4, 1200);
-      digitalWrite(25, LOW);
-      } else{
-      digitalWrite(25, LOW);
-      }
-    }else{
-      lineTrack2();
-    }
-  //singleTrack(1,3);
-  }else{
-    md.setBrakes(400,400);
-  }
-  //colourSensor();
-  //color();
-//Serial.println(slope());
-
- //singleTrack(2,3);
-
- //md.setSpeeds(70,70);
- 
- 
-
-/*if (digitalRead(22) == LOW){ // touch sensor 
-    lineTrack2();
-  }
-  else{
-    md.setBrakes(400,400);
-  }*/
-  //Serial.println((atan2(accelZ(),accelY()) * 180) / 3.1415926);
-  //Serial.print("  ");
-  //Serial.print(accelY());
-  //Serial.print("  ");
-  //Serial.println(accelZ());
-  
-  //Serial.println(digitalRead(26));
-}
-
-//you may easily modify the code  get quadrature..
-//..but be sure this whouldn't let Arduino back!
- 
-void doEncoderA1()
-{
-     PastB1 ? encoder1Pos--:  encoder1Pos++;
-}
-void doEncoderA2()
-{
-     PastB2 ? encoder2Pos--:  encoder2Pos++;
-}
-
-void doEncoderB1()
-{
-     PastB1 = !PastB1; 
-}
-
-void doEncoderB2()
-{
-     PastB2 = !PastB2; 
+void doEncoderB2(){
+  PastB2 = !PastB2; 
 }
 
