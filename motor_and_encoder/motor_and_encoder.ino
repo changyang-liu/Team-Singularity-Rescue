@@ -120,12 +120,12 @@ void loop()
   
   left_average = (far_left + close_left)/2;
   right_average = (far_right + close_right)/2;
- 
+  
   if (state) {
-    if (digitalRead(foilPin) == HIGH) {
-      //do rescue zone
+    if (digitalRead(foilPin)==HIGH) {
+      //rescue function
     } else if (digitalRead(touchSensorPin) == LOW) {
-      //do obstacle
+      //obstacle function
     } else if (left_average < 50 && right_average < 50) {  //double black
       md.setBrakes(400,400);
       colourSensor();
