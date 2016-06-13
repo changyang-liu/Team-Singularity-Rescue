@@ -77,10 +77,14 @@ void setup(){
    
   Serial.begin(19200);
   Serial2.begin(9600);
+  Serial3.begin(9600);
   delay(1);
   Serial2.write(0XA5); 
   Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
   Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
+  Serial3.write(0XA5); 
+  Serial3.write(0X81); 
+  Serial3.write(0X26);
   md.init();
 }
 
@@ -92,6 +96,7 @@ void loop()
 
   reading = digitalRead(buttonPin);
   Serial.println(state);
+
 
   if (reading == LOW) {
     time_passed = millis();
