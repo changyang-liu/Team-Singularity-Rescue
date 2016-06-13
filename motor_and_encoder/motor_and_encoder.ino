@@ -96,7 +96,11 @@ void loop()
 
   reading = digitalRead(buttonPin);
   //Serial.println(state);
-
+  //md.setSpeeds(100, 100);
+  testSpeeds();
+//    Serial.print(encoder1Pos); 
+//    Serial.print(" ");
+//    Serial.println(encoder2Pos);
 
   if (reading == LOW) {
     time_passed = millis();
@@ -371,29 +375,29 @@ void stopIfFault()
     while(1);
   }
 }
+long currentPos1 = 0;
+long currentPos2 = 0;
+long previousPos1 = 0;
+long previousPos2 = 0; 
+int dtheta1 = 0;
+int dtheta2 = 0;
 
 void testSpeeds(){ // find rotational Speed
-  long currentPos1;
-  long currentPos2;
-  long previousPos1 = 0;
-  long previousPos2 = 0; 
-  int dtheta1 = 0;
-  int dtheta2 = 0;
-  
-  md.setSpeeds(100, 100);
-  
-  stopIfFault();
-  
-  currentPos1 = abs(encoder1Pos);
-  currentPos2 = abs(encoder2Pos);
-  dtheta1 = currentPos1 - previousPos1;
-  Serial.print("dtheta1: ");
-  Serial.println(dtheta1);
-  dtheta2 = currentPos2 - previousPos2;
-  Serial.print("dtheta2: ");
-  Serial.println(dtheta2);
-  previousPos1 = currentPos1;
-  previousPos2 = currentPos2;
+  while(true){
+    md.setSpeeds(100, 100);
+    stopIfFault();
+    currentPos1 = abs(encoder1Pos);
+    currentPos2 = abs(encoder2Pos);
+    dtheta1 = currentPos1 - previousPos1;
+    Serial.print("dtheta1: ");
+    Serial.print(dtheta1);
+    dtheta2 = currentPos2 - previousPos2;
+    Serial.print(" dtheta2: ");
+    Serial.println(dtheta2);
+    previousPos1 = currentPos1;
+    previousPos2 = currentPos2;
+    delay(50);
+  }
 }
 
 void doEncoderA1(){
