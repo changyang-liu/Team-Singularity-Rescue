@@ -9,7 +9,7 @@
 #define encoder2PinA  20
 #define encoder2PinB  21
 
-int buttonPin = 24, ledPin = 25, touchSensorPin = 26, foilPin = 27;
+int buttonPin = 53, greenPin = 51, redPin = 50, touchSensorPin = 52, foilPin = 27;
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
@@ -51,7 +51,8 @@ void setup(){
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
 
-  pinMode(ledPin,OUTPUT);
+  pinMode(greenPin,OUTPUT);
+  pinMode(redPin, OUTPUT);
   
   !accel.begin();
   
@@ -97,7 +98,7 @@ void loop()
   reading = digitalRead(buttonPin);
   //Serial.println(state);
   //md.setSpeeds(100, 100);
-  testSpeeds();
+  //testSpeeds();
 //    Serial.print(encoder1Pos); 
 //    Serial.print(" ");
 //    Serial.println(encoder2Pos);
@@ -124,7 +125,7 @@ void loop()
   
   left_average = (far_left + close_left)/2;
   right_average = (far_right + close_right)/2;
-  
+
   if (state) {
     if (digitalRead(foilPin)==HIGH) {
       //rescue function
@@ -137,7 +138,7 @@ void loop()
       delay(200);
       
       if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
-        digitalWrite(ledPin, HIGH);
+        digitalWrite(greenPin, HIGH);
         if (slope() == -1) {  //downward slope
           moveTime(-150,-150, 200);
           singleTrack(1, 20, 4, 1200);
@@ -145,9 +146,9 @@ void loop()
           moveTime(-100, -100, 200);
           singleTrack(1, 30, 4, 1200);
         }
-        digitalWrite(ledPin,LOW);
+        digitalWrite(greenPin,LOW);
       } else {
-        digitalWrite(ledPin, LOW);
+        digitalWrite(greenPin, LOW);
       }
     } else {
       lineTrack2();
