@@ -22,8 +22,8 @@ volatile long encoder1Pos = 0, encoder2Pos = 0;
 volatile boolean PastA1 = 0, PastA2 = 0, PastB1 = 0, PastB2 = 0;
 
 //Colour
-unsigned char Re_buf[11], counter = 0;
-unsigned char sign = 0;
+unsigned char Re_buf[11], counter = 0, Re_buf1[11], counter1 = 0;
+unsigned char sign = 0, sign1 = 0;
 byte rgb[3] = {0}, rgb2[3] = {0};
 
 //Button
@@ -75,7 +75,7 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
    
-  Serial.begin(19200);
+  Serial.begin(115200);
   Serial2.begin(9600);
   Serial3.begin(9600);
   delay(1);
@@ -95,7 +95,7 @@ void loop()
   stopIfFault();
 
   reading = digitalRead(buttonPin);
-  Serial.println(state);
+  //Serial.println(state);
 
 
   if (reading == LOW) {
@@ -213,10 +213,28 @@ void color()
   }
 }
 
+
+void color2()
+{
+  Serial.print(rgb2[0]);
+  Serial.print(" ");
+  Serial.print(rgb2[1]);
+  Serial.print(" ");
+  Serial.print(rgb2[2]);
+  if(rgb2[0]>=80 && rgb2[0]<=230  && rgb2[1]>=100 && rgb2[1]<=240 && rgb2[2]>=40 && rgb2[2]<=220 && abs(rgb2[1] - rgb2[0])>=10 && abs(rgb2[1] - rgb2[2])>=10){
+  //if(rgb[0]<200 && rgb[1]<200 && rgb[2]<200){
+    Serial.print(" ");
+    Serial.println("green");
+  }
+  else{
+    Serial.println(" ");
+  }
+}
+
+
 void SerialEvent() {
   while (Serial2.available()) {   
     Re_buf[counter] = (unsigned char)Serial2.read();
-    
     if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
     counter++;       
     
@@ -232,8 +250,7 @@ void SerialEvent2() {
     Re_buf[counter]=(unsigned char)Serial3.read();
     if(counter==0&&Re_buf[0]!=0x5A) return;      // 检查帧头         
     counter++;       
-    if(counter==8)                //接收到数据
-    {    
+    if(counter==8) {    
        counter=0;                 //重新赋值，准备下一帧数据的接收 
        sign=1;
     }      
