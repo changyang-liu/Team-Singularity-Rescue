@@ -40,3 +40,35 @@ pair<int,int> PIDe_Array::speeds() {
 	
 	return make_pair(_variable_speed + _turn, _variable_speed - _turn);
 }
+
+PIDe_Single::PIDe_Single(int base, int p, int t) {
+	_base = base;
+	_p = p;
+	_t = t;
+}
+
+void PIDe_Single::updateLight(int close_left, int close_right) {
+	_close_left = close_left;
+	_close_right = close_right;
+}
+
+pair<int, int> PIDe_Array::speeds(int side) {
+	_start_time = millis();
+	
+	while(millis() - _start_time < _t) {
+		if (side == 1) {
+			_error = _close_left-50;
+			_turn = _error*_p;
+			
+			return make_pair(_base + _turn, _base - _turn);
+		} else if (side == 2) {
+			_error = close_right-50;
+			_turn = _error*_p;
+			
+			return make_pair(_base - _turn, _base + _turn);
+		} else {
+			return make_pair(0,0);
+		}
+	}
+
+}
