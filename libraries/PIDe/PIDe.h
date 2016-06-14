@@ -6,8 +6,9 @@
 class PIDe_Array {
 	public:
 		PIDe_Array(float kp, float ki, float maximum, float gradient, float half_x);
-		void updateLight(int far_left, int close_left, int close_right, int far_right);
-		pair <int, int> speeds();
+		void update(int far_left, int close_left, int close_right, int far_right);
+		int speed1();
+		int speed2();
 		
 		const double e = 2.71828;
 		
@@ -32,22 +33,25 @@ class PIDe_Array {
 			
 		float _variable_speed;
 		float _kd_ratio = 1.4;
+		
+		float _speed1, _speed2:
 }
 
 class PIDe_Single{
 	public:
-		PIDe_Single(int base, int p, int t);
-		void updateLight(int close_left, int close_right);
-		pair <int,int> speeds(int side);
+		PIDe_Single(int base, int p);
+		void update(int close_left, int close_right);
+		int speed1();
+		int speed2();
 		
 	private:
 		int _close_left, _close_right;
-		int _base, _p, _t;
+		int _base, _p;
 		
 		float _error;
 		float _turn;
 		
-		long _start_time;
+		float _speed1, _speed2:
 		
 }
 

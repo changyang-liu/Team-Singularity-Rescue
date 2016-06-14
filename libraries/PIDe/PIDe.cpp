@@ -10,14 +10,12 @@ PIDe_Array::PIDe_Array(float kp, float ki, float maximum, float gradient, float 
 	_half_x = half_x;
 }
 
-void PIDe_Array::updateLight(int far_left, int close_left, int close_right, int far_right) {
+void PIDe_Array::update(int far_left, int close_left, int close_right, int far_right) {
 	_far_left = far_left;
 	_close_left = close_left;
 	_close_right = close_right;
 	_far_right = far_right
-}
 
-pair<int,int> PIDe_Array::speeds() {
 	_left_ave = (_far_left + _close_left)/2;
 	_right_ave = (_far_right + _close_right)/2;
 	
@@ -38,7 +36,16 @@ pair<int,int> PIDe_Array::speeds() {
 	
 	_prev_error = _error;
 	
-	return make_pair(_variable_speed + _turn, _variable_speed - _turn);
+	_speed1 = _variable_speed + _turn;
+	_speed2 = _variable_speed - _turn;
+}
+
+int PIDe_Array::speed1() {
+	return _speed1;
+}
+
+int PIDe_Array::speed2() {
+	return _speed2;
 }
 
 PIDe_Single::PIDe_Single(int base, int p, int t) {
@@ -47,28 +54,28 @@ PIDe_Single::PIDe_Single(int base, int p, int t) {
 	_t = t;
 }
 
-void PIDe_Single::updateLight(int close_left, int close_right) {
+void PIDe_Single::update(int close_left, int close_right) {
 	_close_left = close_left;
 	_close_right = close_right;
-}
-
-pair<int, int> PIDe_Array::speeds(int side) {
-	_start_time = millis();
 	
-	while(millis() - _start_time < _t) {
-		if (side == 1) {
-			_error = _close_left-50;
-			_turn = _error*_p;
-			
-			return make_pair(_base + _turn, _base - _turn);
-		} else if (side == 2) {
-			_error = close_right-50;
-			_turn = _error*_p;
-			
-			return make_pair(_base - _turn, _base + _turn);
-		} else {
-			return make_pair(0,0);
-		}
+	if (side == 1) {
+		_error = _close_left-50;
+		_turn = _error*_p;
+		
+		_speed1 = _base + _turn
+		_speed2 = _base - _turn;
+	} else if (side == 2) {
+		_error = close_right-50;
+		_turn = _error*_p;
+		
+		_speed1 = _base - _turn;
+		_speed2 = _base + _turn;
 	}
-
 }
+
+int PIDe_Single::speed1() {
+	return _speed1;
+}
+ int PIDe_Single::speed2() {
+	 return _speed2;
+ }
