@@ -1,25 +1,21 @@
+#include <IR.h>
 #include <Scaled.h>
 #include <DualVNH5019MotorShield.h> // from https://github.com/pololu/dual-vnh5019-motor-shield
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
+#include <initLib.h>
 
-#define encoder1PinA  18
-#define encoder1PinB  19
-#define encoder2PinA  20
-#define encoder2PinB  21
 
 int buttonPin = 53, greenPin = 51, redPin = 50, touchSensorPin = 52, foilPin = 27;
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
+initialization ini;
 
 const float e = 2.71828;
 
-//Encoder
-volatile long encoder1Pos = 0, encoder2Pos = 0;
-volatile boolean PastA1 = 0, PastA2 = 0, PastB1 = 0, PastB2 = 0;
 
 //Colour
 unsigned char Re_buf[11], counter = 0, Re_buf1[11], counter1 = 0;
@@ -46,46 +42,32 @@ float integralFactor = 0.9;
 int motor1Speed, motor2Speed;
 int originalSpeed = 30, baseSpeed = originalSpeed;
 
+
+void doEncoderA1(){
+  ini.PastB1 ? ini.encoder1Pos--:  ini.encoder1Pos++;
+}
+void doEncoderA2(){
+
+  ini.PastB2 ? ini.encoder2Pos--:  ini.encoder2Pos++;
+}
+
+void doEncoderB1(){
+  ini.PastB1 = !ini.PastB1; 
+}
+
+void doEncoderB2(){
+  ini.PastB2 = !ini.PastB2; 
+}
+
 void setup(){ 
-  pinMode(buttonPin,INPUT);
-  pinMode(touchSensorPin, INPUT_PULLUP);
-  pinMode(foilPin, INPUT);
+  ini.initialize();
+  attachInterrupt(digitalPinToInterrupt(ini.encoder1PinA), doEncoderA1, RISING);
+  attachInterrupt(digitalPinToInterrupt(ini.encoder2PinA), doEncoderA2, RISING);
+  attachInterrupt(digitalPinToInterrupt(ini.encoder1PinB), doEncoderB1, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ini.encoder2PinB), doEncoderB2, CHANGE); 
 
-  pinMode(greenPin,OUTPUT);
-  pinMode(redPin, OUTPUT);
-  
+
   !accel.begin();
-  
-  pinMode(encoder1PinA, INPUT); //turn on pullup resistor
-  digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinA, INPUT);
-  digitalWrite(encoder2PinA, HIGH); 
-  pinMode(encoder1PinB, INPUT);
-  digitalWrite(encoder1PinB, HIGH);
-  pinMode(encoder2PinB, INPUT);
-  digitalWrite(encoder2PinB, HIGH);
-  
-  PastA1 = (boolean)digitalRead(encoder1PinA); //initial value of channel A;
-  PastA2 = (boolean)digitalRead(encoder2PinA); //initial value of channel A;
-  PastB1 = (boolean)digitalRead(encoder1PinB); //and channel B
-  PastB2 = (boolean)digitalRead(encoder2PinB); //and channel B
-
-//To Speed up even more, you may define manually the ISRs
-  attachInterrupt(digitalPinToInterrupt(encoder1PinA), doEncoderA1, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoder2PinA), doEncoderA2, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoder1PinB), doEncoderB1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(encoder2PinB), doEncoderB2, CHANGE); 
-   
-  Serial.begin(115200);
-  Serial2.begin(9600);
-  Serial3.begin(9600);
-  delay(1);
-  Serial2.write(0XA5); 
-  Serial2.write(0X81);    //8 - bit7 = 1; 1 - bit0 = 1
-  Serial2.write(0X26);    //Sum of A5 and 81 (for verification)
-  Serial3.write(0XA5); 
-  Serial3.write(0X81); 
-  Serial3.write(0X26);
   md.init();
 }
 
@@ -94,14 +76,13 @@ void setup(){
 void loop() 
 {
   stopIfFault();
-
   reading = digitalRead(buttonPin);
   //Serial.println(state);
-  md.setM1Speed(50);
+  //md.setM1Speed(50);
   //testSpeeds(40);
-//  Serial.print(encoder1Pos); 
+//  Serial.print(ini.encoder1Pos); 
 //  Serial.print(" ");
-//  Serial.println(encoder2Pos);
+//  Serial.println(ini.encoder2Pos);
 
   if (reading == LOW) {
     time_passed = millis();
@@ -333,22 +314,22 @@ void moveDegs(int motor1Speed, int motor2Speed, int degs){
   unsigned long counts;
   if(motor1Speed==0){  //when only right motor is moving
     counts = (long)(degs*55/36+(100-motor2Speed)*0.3);
-    while(abs(encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      Serial.println(abs(encoder2Pos));
+      Serial.println(abs(ini.encoder2Pos));
     }
    }
   else{
     counts = (long)(degs*55/36+(100-motor1Speed)*0.3);
-    while(abs(encoder1Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder1Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      Serial.println(abs(encoder1Pos));
+      Serial.println(abs(ini.encoder1Pos));
     }
    } 
   //Serial.println(counts);
   md.setBrakes(400, 400);
-  encoder1Pos=0;
-  encoder2Pos=0;
+  ini.encoder1Pos=0;
+  ini.encoder2Pos=0;
 }
 
 void moveTime(int motor1Speed, int motor2Speed, long t){
@@ -389,8 +370,8 @@ void testSpeeds(int spd){ // find rotational Speed
   float motor2Speed = spd;
   while(true){
     stopIfFault();
-    currentPos1 = abs(encoder1Pos);
-    currentPos2 = abs(encoder2Pos);
+    currentPos1 = abs(ini.encoder1Pos);
+    currentPos2 = abs(ini.encoder2Pos);
     dtheta1 = currentPos1 - previousPos1;
     Serial.print("dtheta1: ");
     Serial.print(dtheta1);
@@ -412,19 +393,4 @@ void testSpeeds(int spd){ // find rotational Speed
   }
 }
 
-void doEncoderA1(){
-  PastB1 ? encoder1Pos--:  encoder1Pos++;
-}
-void doEncoderA2(){
-
-  PastB2 ? encoder2Pos--:  encoder2Pos++;
-}
-
-void doEncoderB1(){
-  PastB1 = !PastB1; 
-}
-
-void doEncoderB2(){
-  PastB2 = !PastB2; 
-}
 
