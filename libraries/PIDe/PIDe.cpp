@@ -40,11 +40,11 @@ void PIDe_Array::update(int far_left, int close_left, int close_right, int far_r
 	_speed2 = _variable_speed - _turn;
 }
 
-int PIDe_Array::speed1() {
+float PIDe_Array::speed1() {
 	return _speed1;
 }
 
-int PIDe_Array::speed2() {
+float PIDe_Array::speed2() {
 	return _speed2;
 }
 
@@ -73,9 +73,9 @@ void PIDe_Single::update(int close_left, int close_right) {
 	}
 }
 
-int PIDe_Single::speed1() {
+float PIDe_Single::speed1() {
 	return _speed1;
 }
- int PIDe_Single::speed2() {
+float PIDe_Single::speed2() {
 	 return _speed2;
  }

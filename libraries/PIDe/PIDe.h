@@ -34,7 +34,7 @@ class PIDe_Array {
 		float _variable_speed;
 		float _kd_ratio = 1.4;
 		
-		float _speed1, _speed2:
+		float _speed1, _speed2;
 };
 
 class PIDe_Single{
@@ -51,7 +51,7 @@ class PIDe_Single{
 		float _error;
 		float _turn;
 		
-		float _speed1, _speed2:
+		float _speed1, _speed2;
 		
 };
 
