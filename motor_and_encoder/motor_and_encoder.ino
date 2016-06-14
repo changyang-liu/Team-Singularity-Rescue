@@ -43,21 +43,7 @@ int motor1Speed, motor2Speed;
 int originalSpeed = 30, baseSpeed = originalSpeed;
 
 
-void doEncoderA1(){
-  ini.PastB1 ? ini.encoder1Pos--:  ini.encoder1Pos++;
-}
-void doEncoderA2(){
-
-  ini.PastB2 ? ini.encoder2Pos--:  ini.encoder2Pos++;
-}
-
-void doEncoderB1(){
-  ini.PastB1 = !ini.PastB1; 
-}
-
-void doEncoderB2(){
-  ini.PastB2 = !ini.PastB2; 
-}
+void doEncoderA1(){ini.PastB1?ini.encoder1Pos--:ini.encoder1Pos++;}void doEncoderA2(){ini.PastB2?ini.encoder2Pos--:ini.encoder2Pos++;}void doEncoderB1(){ini.PastB1=!ini.PastB1;}void doEncoderB2(){ini.PastB2=!ini.PastB2;}
 
 void setup(){ 
   ini.initialize();
@@ -65,8 +51,6 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(ini.encoder2PinA), doEncoderA2, RISING);
   attachInterrupt(digitalPinToInterrupt(ini.encoder1PinB), doEncoderB1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ini.encoder2PinB), doEncoderB2, CHANGE); 
-
-
   !accel.begin();
   md.init();
 }
