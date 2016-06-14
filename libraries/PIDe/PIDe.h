@@ -35,7 +35,7 @@ class PIDe_Array {
 		float _kd_ratio = 1.4;
 		
 		float _speed1, _speed2:
-}
+};
 
 class PIDe_Single{
 	public:
@@ -53,6 +53,6 @@ class PIDe_Single{
 		
 		float _speed1, _speed2:
 		
-}
+};
 
 #endif
