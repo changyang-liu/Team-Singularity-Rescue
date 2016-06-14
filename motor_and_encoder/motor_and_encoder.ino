@@ -1,5 +1,5 @@
 #include <Scaled.h>
-#include "DualVNH5019MotorShield.h" // from https://github.com/pololu/dual-vnh5019-motor-shield
+#include <DualVNH5019MotorShield.h> // from https://github.com/pololu/dual-vnh5019-motor-shield
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
@@ -97,11 +97,11 @@ void loop()
 
   reading = digitalRead(buttonPin);
   //Serial.println(state);
-  //md.setSpeeds(100, 100);
-  //testSpeeds();
-//    Serial.print(encoder1Pos); 
-//    Serial.print(" ");
-//    Serial.println(encoder2Pos);
+  md.setM1Speed(50);
+  //testSpeeds(40);
+//  Serial.print(encoder1Pos); 
+//  Serial.print(" ");
+//  Serial.println(encoder2Pos);
 
   if (reading == LOW) {
     time_passed = millis();
@@ -154,7 +154,7 @@ void loop()
       lineTrack2();
     }
   }else{
-    md.setBrakes(400,400);
+    //md.setBrakes(400,400);
   }
 }
 
@@ -380,12 +380,14 @@ long currentPos1 = 0;
 long currentPos2 = 0;
 long previousPos1 = 0;
 long previousPos2 = 0; 
-int dtheta1 = 0;
-int dtheta2 = 0;
 
-void testSpeeds(){ // find rotational Speed
+void testSpeeds(int spd){ // find rotational Speed
+  float dtheta1;
+  float dtheta2;
+  moveTime(spd, spd, 500);
+  float motor1Speed = spd;
+  float motor2Speed = spd;
   while(true){
-    md.setSpeeds(100, 100);
     stopIfFault();
     currentPos1 = abs(encoder1Pos);
     currentPos2 = abs(encoder2Pos);
@@ -394,9 +396,18 @@ void testSpeeds(){ // find rotational Speed
     Serial.print(dtheta1);
     dtheta2 = currentPos2 - previousPos2;
     Serial.print(" dtheta2: ");
-    Serial.println(dtheta2);
+    Serial.print(dtheta2);
+    Serial.print(" 1Speed: ");
+    Serial.print(motor1Speed);
+    Serial.print(" 2Speed: ");
+    Serial.println(motor2Speed);
     previousPos1 = currentPos1;
     previousPos2 = currentPos2;
+    if(dtheta1 == 0){dtheta1 = 1;}
+    if(dtheta2 == 0){dtheta2 = 1;}
+    motor2Speed = (dtheta1/dtheta2)*motor2Speed;
+    
+    md.setSpeeds(motor1Speed, motor2Speed);
     delay(50);
   }
 }
