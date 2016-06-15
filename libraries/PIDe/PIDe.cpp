@@ -48,6 +48,15 @@ float PIDe_Array::speed2() {
 	return _speed2;
 }
 
+void PIDe_Array::debug() {
+	Serial.print("Error: ");
+	Serial.print(_error);
+	Serial.print(" Turn: ");
+	Serial.print(_turn);
+	Serial.print(" Variable speed: ");
+	Serial.println(_variable_speed);
+}
+
 PIDe_Single::PIDe_Single(int base, int p) {
 	_base = base;
 	_p = p;

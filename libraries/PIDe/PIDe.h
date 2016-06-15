@@ -9,6 +9,7 @@ class PIDe_Array {
 		void update(int far_left, int close_left, int close_right, int far_right);
 		float speed1();
 		float speed2();
+		void debug();
 		
 		const double e = 2.71828;
 		
@@ -29,7 +30,7 @@ class PIDe_Array {
 		float _derivative = 0;
 		
 		int _max_integral = 10000;
-		float _integral_factor = 0.9;
+		float _integral_factor = 0.7;
 			
 		float _variable_speed;
 		float _kd_ratio = 1.4;

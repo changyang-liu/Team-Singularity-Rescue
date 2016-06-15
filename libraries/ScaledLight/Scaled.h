@@ -14,15 +14,15 @@ class Scaled
 	void print ();
 	void printlog();
   
-        int sensorPin1 = A15;
-        int sensorPin2 = A14;
+        int sensorPin1 = A11;
+        int sensorPin2 = A12;
         int sensorPin3 = A13;
-        int sensorPin4 = A12;
+        int sensorPin4 = A14;
 
-	float max1 = 6.51, min1 = 4.32;
-	float max2 = 6.83, min2 = 5.19;
-	float max3 = 6.81, min3 = 5.65;
-	float max4 = 6.62, min4 = 5.00;
+	float max1 = 6.31, min1 = 4.45;
+	float max2 = 6.57, min2 = 4.70;
+	float max3 = 6.80, min3 = 4.98;
+	float max4 = 6.32, min4 = 4.15;
 
         // float range1 = 330 - 50;
         // float range2 = 816 - 120;
