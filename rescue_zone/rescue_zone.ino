@@ -33,6 +33,17 @@ long time_passed = 0, debounce = 100;
 
 void doEncoderA1(){ini.PastB1?ini.encoder1Pos--:ini.encoder1Pos++;}void doEncoderA2(){ini.PastB2?ini.encoder2Pos--:ini.encoder2Pos++;}void doEncoderB1(){ini.PastB1=!ini.PastB1;}void doEncoderB2(){ini.PastB2=!ini.PastB2;}
 
+int rightDist, leftDist;
+long distTravelled;
+
+long currentPos1 = 0;
+long currentPos2 = 0;
+long previousPos1 = 0;
+long previousPos2 = 0; 
+
+float dtheta1;
+float dtheta2;
+
 void setup(){ 
   ini.initialize();
   attachInterrupt(digitalPinToInterrupt(ini.encoder1PinA), doEncoderA1, RISING);
@@ -47,26 +58,67 @@ void setup(){
 void loop() 
 {
   stopIfFault();
-  printIR();
-  testEncoders();
-  md.setSpeeds(40, 40);
+//  while(1){
+//    printIR();
+//  }
+//  while(1){
+//    testEncoders();
+//  }
+//  md.setSpeeds(40, 40);
+//  moveTime(40, 40, 300);
+//  while(irFront.distance()>40){
+//    constSpeeds(40);
+//  }
+//  md.setBrakes(400, 400);
+//  delay(300);
+//  moveCounts(50, -50, 400);
+//  moveCounts(-50, -50, 200);
+//  moveCounts(50, -50, 820);
+//  moveTime(-80, -80, 2000);
+//  printIR();
+//  delay(300);
+//  leftDist = irLeft.distance() - 5;
+//  rightDist = 80 - leftDist + 5;
+//  while(1){
+//    md.setBrakes(400, 400);
+//    printIR();
+//  }
+  distTravelled = 0;
   moveTime(40, 40, 200);
-  while(irFront.distance()>45){
-    constSpeeds(40);
+  while (1){
+    while(irLeft.distance()>leftDist && distTravelled>600 || irRight.distance()>rightDist || irFront.distance()>10){
+        constSpeeds(40);
+        distTravelled = distTravelled + dtheta1;
+        Serial.println(distTravelled);
+    }
+    md.setBrakes(400, 400);
+    if(irLeft.distance()>leftDist){
+      ballCollectLeft();
+    }else{
+      ballCollectRight();
+    }
   }
-  md.setBrakes(400, 400);
-  delay(300);
-  moveCounts(50, -50, 420);
-  moveTime(50, 50, 3000);
-  delay(300);
-  moveTime(-40, -40, 200);
-  while(irLeft.distance()>35){
-      constSpeeds(-40);
-  }
-  md.setBrakes(400, 400);
-  delay(100000);
+ delay(20000);
 }
 
+
+void ballCollectLeft(){
+   
+}
+
+void ballCollectRight(){
+  moveCounts(-50, -50 , 100);
+  moveCounts(50, -50, 380);
+  while(irFront.distance()>leftDistance){
+    md.setSpeeds(40, -40);
+  }
+  md.setBrakes(400, 400);
+  moveTime(40, 40, 200);
+  while(irFront.distance()>10){
+    constSpeeds(40);
+  }
+  md.setBrakes(400, 400);  
+}
 
 
 void printIR(){
@@ -102,6 +154,7 @@ void moveCounts(int motor1Speed, int motor2Speed, long counts){
    } 
   //Serial.println(counts);
   md.setBrakes(400, 400);
+  delay(200);
   ini.encoder1Pos=0;
   ini.encoder2Pos=0;
 }
@@ -127,6 +180,7 @@ void moveDegs(int motor1Speed, int motor2Speed, int degs){
    } 
   //Serial.println(counts);
   md.setBrakes(400, 400);
+  delay(200);
   ini.encoder1Pos=0;
   ini.encoder2Pos=0;
 }
@@ -157,13 +211,6 @@ void stopIfFault()
   }
 }
 
-long currentPos1 = 0;
-long currentPos2 = 0;
-long previousPos1 = 0;
-long previousPos2 = 0; 
-
-float dtheta1;
-float dtheta2;
 void constSpeeds(int spd){ // find rotational Speed
   float motor1Speed = spd;
   float motor2Speed = spd;
@@ -178,14 +225,13 @@ void constSpeeds(int spd){ // find rotational Speed
   Serial.print(dtheta2);
   Serial.print(" 1Speed: ");
   Serial.print(motor1Speed);
-  Serial.print(" 2Speed: ");
-  Serial.println(motor2Speed);
   previousPos1 = currentPos1;
   previousPos2 = currentPos2;
   if(dtheta1 == 0){dtheta1 = 1;}
   if(dtheta2 == 0){dtheta2 = 1;}
-  //motor1Speed = (dtheta2/dtheta1)*motor1Speed;
   motor2Speed = (dtheta1/dtheta2)*motor2Speed;
+  Serial.print(" 2Speed: ");
+  Serial.println(motor2Speed);
   md.setSpeeds(motor1Speed, motor2Speed);
   delay(50);
 }

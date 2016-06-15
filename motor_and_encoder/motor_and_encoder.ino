@@ -64,9 +64,9 @@ void loop()
   //Serial.println(state);
   //md.setM1Speed(50);
   //testSpeeds(40);
-//  Serial.print(ini.encoder1Pos); 
-//  Serial.print(" ");
-//  Serial.println(ini.encoder2Pos);
+  Serial.print(ini.encoder1Pos); 
+  Serial.print(" ");
+  Serial.println(ini.encoder2Pos);
 
   if (reading == LOW) {
     time_passed = millis();
