@@ -14,7 +14,7 @@ void PIDe_Array::update(int far_left, int close_left, int close_right, int far_r
 	_far_left = far_left;
 	_close_left = close_left;
 	_close_right = close_right;
-	_far_right = far_right
+	_far_right = far_right;
 
 	_left_ave = (_far_left + _close_left)/2;
 	_right_ave = (_far_right + _close_right)/2;
@@ -48,13 +48,12 @@ float PIDe_Array::speed2() {
 	return _speed2;
 }
 
-PIDe_Single::PIDe_Single(int base, int p, int t) {
+PIDe_Single::PIDe_Single(int base, int p) {
 	_base = base;
 	_p = p;
-	_t = t;
 }
 
-void PIDe_Single::update(int close_left, int close_right) {
+void PIDe_Single::update(int side, int close_left, int close_right) {
 	_close_left = close_left;
 	_close_right = close_right;
 	
@@ -62,7 +61,7 @@ void PIDe_Single::update(int close_left, int close_right) {
 		_error = _close_left-50;
 		_turn = _error*_p;
 		
-		_speed1 = _base + _turn
+		_speed1 = _base + _turn;
 		_speed2 = _base - _turn;
 	} else if (side == 2) {
 		_error = close_right-50;

@@ -7,8 +7,8 @@ class PIDe_Array {
 	public:
 		PIDe_Array(float kp, float ki, float maximum, float gradient, float half_x);
 		void update(int far_left, int close_left, int close_right, int far_right);
-		int speed1();
-		int speed2();
+		float speed1();
+		float speed2();
 		
 		const double e = 2.71828;
 		
@@ -40,9 +40,9 @@ class PIDe_Array {
 class PIDe_Single{
 	public:
 		PIDe_Single(int base, int p);
-		void update(int close_left, int close_right);
-		int speed1();
-		int speed2();
+		void update(int side, int close_left, int close_right);
+		float speed1();
+		float speed2();
 		
 	private:
 		int _close_left, _close_right;
