@@ -13,8 +13,8 @@ double distance();
   private:
 	int ir;
 	int model = 1080;
-	int delayTime = 0.005;
-	int samples =500;
+	int delayTime = 0;
+	int samples = 50;
 	int maxDiff = 17;
 	int i;
 
