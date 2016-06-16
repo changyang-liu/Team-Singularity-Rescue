@@ -42,7 +42,7 @@ void Initialization::initialize () {
   Serial3.write(0X26);
 }
 
-int Initialization::state() {
+void Initialization::update() {
 	_reading = digitalRead(buttonPin);
 	
 	if (!_reading) {
@@ -54,7 +54,7 @@ int Initialization::state() {
 			_once = true;
 		}
 	}
-	
-	return _state;
 }
+
+int Initialization::state() {return _state;}
 

@@ -12,6 +12,8 @@ class Initialization {
 		void doEncoderB2();
 		void initialize();
 		
+		void update();
+		
 		int state();
 
 		int encoder1PinA = 18;
