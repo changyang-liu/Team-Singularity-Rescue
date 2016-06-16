@@ -2,10 +2,10 @@
 #include <initLib.h>
 #include <DualVNH5019MotorShield.h>
 
-initialization::initialization() {}
+Initialization::Initialization() {}
 
 
-void initialization::initialize () {
+void Initialization::initialize () {
    pinMode(buttonPin,INPUT);
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
@@ -42,7 +42,7 @@ void initialization::initialize () {
   Serial3.write(0X26);
 }
 
-int initialization::state() {
+int Initialization::state() {
 	_reading = digitalRead(buttonPin);
 	
 	if (!_reading) {

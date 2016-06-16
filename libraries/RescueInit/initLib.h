@@ -3,9 +3,9 @@
 #ifndef initLib_h
 #define initLib_h
 
-class initialization {
+class Initialization {
 	public:
-		initialization();
+		Initialization();
 		void doEncoderA1();
 		void doEncoderA2();
 		void doEncoderB1();
