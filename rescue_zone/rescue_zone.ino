@@ -58,31 +58,8 @@ void setup(){
 void loop() 
 {
   stopIfFault();
-//  while(1){
-//    printIR();
-//    delay(200);
-//  }
-//  while(1){
-//    testEncoders();
-//  }
-  //md.setSpeeds(40, 40);
-//  moveTime(60, 60, 300);
-//  while(abs(ini.encoder1Pos) < 1200){
-//    constSpeeds(60);
-//  }
-//  md.setBrakes(400, 400);
-//  delay(200);
-//  moveCounts(50, -50, 450);
-//  moveCounts(-50, -50, 200);
-//  moveCounts(50, -50, 900);
-//  moveTime(-80, -80, 2000);
-//  printIR();
-//  delay(300);
-//  while(1){
-//    md.setBrakes(400, 400);
-//    printIR();
-//  }
-if(ini.state()){
+  //entrance();
+  if(ini.state()){
   rightDist = irRight.distance() - 5;
   leftDist = 80 - rightDist;
   distTravelled = 0;
@@ -104,6 +81,26 @@ if(ini.state()){
 }else{
   md.setBrakes(400, 400);
 }
+}
+
+void entrance(){
+  md.setSpeeds(40, 40);
+  moveTime(60, 60, 300);
+  while(abs(ini.encoder1Pos) < 1200){
+    constSpeeds(60);
+  }
+  md.setBrakes(400, 400);
+  delay(200);
+  moveCounts(50, -50, 450);
+  moveCounts(-50, -50, 200);
+  moveCounts(50, -50, 900);
+  moveTime(-80, -80, 2000);
+  printIR();
+  delay(300);
+  while(1){
+    md.setBrakes(400, 400);
+    printIR();
+  }
 }
 
 
