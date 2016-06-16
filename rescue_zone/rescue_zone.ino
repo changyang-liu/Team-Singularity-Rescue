@@ -12,7 +12,7 @@ int buttonPin = 53, greenPin = 51, redPin = 50, touchSensorPin = 52, foilPin = 2
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
-initialization ini;
+Initialization ini;
 SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 SharpIR irLeft = SharpIR(A10);
@@ -60,45 +60,50 @@ void loop()
   stopIfFault();
 //  while(1){
 //    printIR();
+//    delay(200);
 //  }
 //  while(1){
 //    testEncoders();
 //  }
-//  md.setSpeeds(40, 40);
-//  moveTime(40, 40, 300);
-//  while(irFront.distance()>40){
-//    constSpeeds(40);
+  //md.setSpeeds(40, 40);
+//  moveTime(60, 60, 300);
+//  while(abs(ini.encoder1Pos) < 1200){
+//    constSpeeds(60);
 //  }
 //  md.setBrakes(400, 400);
-//  delay(300);
-//  moveCounts(50, -50, 400);
+//  delay(200);
+//  moveCounts(50, -50, 450);
 //  moveCounts(-50, -50, 200);
-//  moveCounts(50, -50, 820);
+//  moveCounts(50, -50, 900);
 //  moveTime(-80, -80, 2000);
 //  printIR();
 //  delay(300);
-//  leftDist = irLeft.distance() - 5;
-//  rightDist = 80 - leftDist + 5;
 //  while(1){
 //    md.setBrakes(400, 400);
 //    printIR();
 //  }
+if(ini.state()){
+  rightDist = irRight.distance() - 5;
+  leftDist = 80 - rightDist;
   distTravelled = 0;
   moveTime(40, 40, 200);
-  while (1){
-    while(irLeft.distance()>leftDist && distTravelled>600 || irRight.distance()>rightDist || irFront.distance()>10){
-        constSpeeds(40);
+  while (ini.state() == 1){
+    while(irRight.distance()>rightDist){
+        md.setSpeeds(40, 40);
         distTravelled = distTravelled + dtheta1;
-        Serial.println(distTravelled);
+        Serial.println(irRight.distance());
     }
     md.setBrakes(400, 400);
+    delay(300);  
     if(irLeft.distance()>leftDist){
       ballCollectLeft();
     }else{
       ballCollectRight();
     }
   }
- delay(20000);
+}else{
+  md.setBrakes(400, 400);
+}
 }
 
 
@@ -107,17 +112,42 @@ void ballCollectLeft(){
 }
 
 void ballCollectRight(){
-  moveCounts(-50, -50 , 100);
-  moveCounts(50, -50, 380);
-  while(irFront.distance()>leftDistance){
-    md.setSpeeds(40, -40);
+  moveCounts(-50, -50 , 200);
+  moveCounts(40, -40, 380);
+  
+  long start_time = millis();
+  long threshold = 500;
+  boolean halt = false;
+
+  md.setSpeeds(40,-40);
+  while(!halt) {
+    if (irFront.distance() >= rightDist) {
+      if (millis() - start_time > threshold) {
+        md.setBrakes(400,400);
+        moveTime(-40,40,(millis()-start_time)/2);
+        md.setBrakes(400, 400);
+        moveTime(40, 40, 200);
+        while(irFront.distance()>10){
+          md.setSpeeds(40, 40);
+        }
+        md.setBrakes(400, 400); 
+        half = true;
+      } else {
+         start_time = millis();      
+      }
+    }
   }
-  md.setBrakes(400, 400);
-  moveTime(40, 40, 200);
-  while(irFront.distance()>10){
-    constSpeeds(40);
-  }
-  md.setBrakes(400, 400);  
+
+  
+//  while(irFront.distance()>=rightDist){
+//    md.setSpeeds(40, -40);
+//  }
+//  md.setBrakes(400, 400);
+//  moveTime(40, 40, 200);
+//  while(irFront.distance()>10){
+//    md.setSpeeds(40, 40);
+//  }
+//  md.setBrakes(400, 400);  
 }
 
 
@@ -218,20 +248,20 @@ void constSpeeds(int spd){ // find rotational Speed
   currentPos1 = abs(ini.encoder1Pos);
   currentPos2 = abs(ini.encoder2Pos);
   dtheta1 = currentPos1 - previousPos1;
-  Serial.print("dtheta1: ");
-  Serial.print(dtheta1);
+//  Serial.print("dtheta1: ");
+//  Serial.print(dtheta1);
   dtheta2 = currentPos2 - previousPos2;
-  Serial.print(" dtheta2: ");
-  Serial.print(dtheta2);
-  Serial.print(" 1Speed: ");
-  Serial.print(motor1Speed);
+//  Serial.print(" dtheta2: ");
+//  Serial.print(dtheta2);
+//  Serial.print(" 1Speed: ");
+//  Serial.print(motor1Speed);
   previousPos1 = currentPos1;
   previousPos2 = currentPos2;
   if(dtheta1 == 0){dtheta1 = 1;}
   if(dtheta2 == 0){dtheta2 = 1;}
   motor2Speed = (dtheta1/dtheta2)*motor2Speed;
-  Serial.print(" 2Speed: ");
-  Serial.println(motor2Speed);
+//  Serial.print(" 2Speed: ");
+//  Serial.println(motor2Speed);
   md.setSpeeds(motor1Speed, motor2Speed);
   delay(50);
 }
