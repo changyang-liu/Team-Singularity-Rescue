@@ -58,7 +58,7 @@ void setup(){
 void loop() 
 {
   stopIfFault();
-  //entrance();
+  entrance();
   if(ini.state()){
   rightDist = irRight.distance() - 5;
   leftDist = 80 - rightDist;
@@ -128,7 +128,7 @@ void ballCollectRight(){
           md.setSpeeds(40, 40);
         }
         md.setBrakes(400, 400); 
-        half = true;
+        halt = true;
       } else {
          start_time = millis();      
       }
