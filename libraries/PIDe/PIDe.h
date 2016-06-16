@@ -30,10 +30,10 @@ class PIDe_Array {
 		float _derivative = 0;
 		
 		int _max_integral = 10000;
-		float _integral_factor = 0.7;
+		float _integral_factor = 0.8;
 			
 		float _variable_speed;
-		float _kd_ratio = 1.4;
+		float _kd_ratio = 1;
 		
 		float _speed1, _speed2;
 };
