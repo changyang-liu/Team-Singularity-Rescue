@@ -6,7 +6,7 @@ Initialization::Initialization() {}
 
 
 void Initialization::initialize () {
-   pinMode(buttonPin,INPUT);
+   pinMode(buttonPin,INPUT_PULLUP);
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
 
@@ -42,19 +42,8 @@ void Initialization::initialize () {
   Serial3.write(0X26);
 }
 
-void Initialization::update() {
-	_reading = digitalRead(buttonPin);
-	
-	if (!_reading) {
-		_time_start = millis();
-		_once = false;
-	} else {
-		if (millis() - _time_start > _debounce && !_once) {
-			(_state)? _state = LOW:_state = HIGH;
-			_once = true;
-		}
-	}
+int Initialization::button()
+{
+	return digitalRead(17);
 }
-
-int Initialization::state() {return _state;}
 

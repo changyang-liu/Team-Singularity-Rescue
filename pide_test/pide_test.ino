@@ -36,8 +36,7 @@ void setup() {
 
 void loop() {
   light.print();
-  ini.update();
-  if(ini.state()){
+  if(!ini.button()){
     int far_left = light.scale1();
     int close_left = light.scale2();
     int close_right = light.scale3();

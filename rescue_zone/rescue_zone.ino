@@ -44,9 +44,8 @@ void setup(){
 void loop() 
 {
   stopIfFault();
-  ini.update();
   //entrance();
-  if(ini.state()){
+  if(!ini.button()){
     scan();
   }else{
     md.setBrakes(400, 400);

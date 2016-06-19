@@ -12,7 +12,7 @@ int buttonPin = 53, greenPin = 51, redPin = 50, touchSensorPin = 52, foilPin = 2
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
-initialization ini;
+Initialization ini;
 
 const float e = 2.71828;
 
@@ -59,68 +59,72 @@ void setup(){
 
 void loop() 
 {
-  stopIfFault();
+  //stopIfFault();
   reading = digitalRead(buttonPin);
   //Serial.println(state);
   //md.setM1Speed(50);
   //testSpeeds(40);
-  Serial.print(ini.encoder1Pos); 
-  Serial.print(" ");
-  Serial.println(ini.encoder2Pos);
+    Serial.print(ini.encoder1Pos); 
+    Serial.print(" ");
+    Serial.println(ini.encoder2Pos);
+    moveDegs(50,50,100);
+    
+//  md.setSpeeds(50,50);
+//  md.setBrakes(400,400);
 
-  if (reading == LOW) {
-    time_passed = millis();
-    once = false;
-  } else {
-    if (millis() - time_passed > debounce && !once) {
-      if (state == HIGH) {
-        state = LOW;
-      } else {
-        state = HIGH;
-      }
-      once = true;
-    }
-  }
-  
-  
-  far_left = light.scale1();
-  close_left = light.scale2();
-  close_right = light.scale3();
-  far_right = light.scale4();
-  
-  left_average = (far_left + close_left)/2;
-  right_average = (far_right + close_right)/2;
+//  if (reading == LOW) {
+//    time_passed = millis();
+//    once = false;
+//  } else {
+//    if (millis() - time_passed > debounce && !once) {
+//      if (state == HIGH) {
+//        state = LOW;
+//      } else {
+//        state = HIGH;
+//      }
+//      once = true;
+//    }
+//  }
+//  
+//  
+//  far_left = light.scale1();
+//  close_left = light.scale2();
+//  close_right = light.scale3();
+//  far_right = light.scale4();
+//  
+//  left_average = (far_left + close_left)/2;
+//  right_average = (far_right + close_right)/2;
 
-  if (state) {
-    if (digitalRead(foilPin)==HIGH) {
-      //rescue function
-    } else if (digitalRead(touchSensorPin) == LOW) {
-      //obstacle function
-    } else if (left_average < 50 && right_average < 50) {  //double black
-      md.setBrakes(400,400);
-      colourSensor();
-      colourSensor2();
-      delay(200);
-      
-      if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
-        digitalWrite(greenPin, HIGH);
-        if (slope() == -1) {  //downward slope
-          moveTime(-150,-150, 200);
-          singleTrack(1, 20, 4, 1200);
-        } else {  //level ground
-          moveTime(-100, -100, 200);
-          singleTrack(1, 30, 4, 1200);
-        }
-        digitalWrite(greenPin,LOW);
-      } else {
-        digitalWrite(greenPin, LOW);
-      }
-    } else {
-      lineTrack2();
-    }
-  }else{
-    //md.setBrakes(400,400);
-  }
+//  if (state) {
+//    if (digitalRead(foilPin)==HIGH) {
+//      //rescue function
+//    } else if (digitalRead(touchSensorPin) == LOW) {
+//      //obstacle function
+//    } else if (left_average < 50 && right_average < 50) {  //double black
+//      md.setBrakes(400,400);
+//      colourSensor();
+//      colourSensor2();
+//      delay(200);
+//      
+//      if(rgb[0]>=80 && rgb[0]<=230  && rgb[1]>=100 && rgb[1]<=240 && rgb[2]>=40 && rgb[2]<=220 && abs(rgb[1] - rgb[0])>=10 && abs(rgb[1] - rgb[2])>=10){
+//        digitalWrite(greenPin, HIGH);
+//        if (slope() == -1) {  //downward slope
+//          moveTime(-150,-150, 200);
+//          singleTrack(1, 20, 4, 1200);
+//        } else {  //level ground
+//          moveTime(-100, -100, 200);
+//          singleTrack(1, 30, 4, 1200);
+//        }
+//        digitalWrite(greenPin,LOW);
+//      } else {
+//        digitalWrite(greenPin, LOW);
+//      }
+//    } else {
+//      lineTrack2();
+//    }
+//  }else{
+//    //md.setBrakes(400,400);
+//  }
 }
 
 void lineTrack2(){
