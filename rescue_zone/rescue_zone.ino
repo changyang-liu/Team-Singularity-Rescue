@@ -30,40 +30,69 @@ long previousPos2 = 0;
 float dtheta1;
 float dtheta2;
 
+boolean done;
+int prevState;
+
+int samples;
+float total;
+float avg;
+
 void setup(){ 
   ini.initialize();
   attachInterrupt(digitalPinToInterrupt(ini.encoder1PinA), doEncoderA1, RISING);
   attachInterrupt(digitalPinToInterrupt(ini.encoder2PinA), doEncoderA2, RISING);
   attachInterrupt(digitalPinToInterrupt(ini.encoder1PinB), doEncoderB1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ini.encoder2PinB), doEncoderB2, CHANGE); 
-  !accel.begin();
+  //!accel.begin();          //Don't leave it in if accelerometer is not connected; the code will not proceed until it is connected
   md.init();
+  done = false;
+  if (ini.button() == 0) {prevState = 0;}
+  else {prevState = 1;}
 }
 
+//23 counts is roughly 1 cm (adjusted for inertia) at speed 60
 
 void loop() 
 {
   stopIfFault();
-  //entrance();
-  if(!ini.button()){
-    scan();
-  }else{
-    md.setBrakes(400, 400);
+  Serial.println(rightAvg());
+  if(ini.button() == 0 && done == false && prevState == 1){
+    //entrance();
+    //scan();
+    done = true;
   }
+  else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
+  else if(ini.button() == 1 && done == true) {done = false; prevState = 0;}
+  else if(ini.button() == 1 && prevState == 0) {prevState = 1;}
+  else {md.setBrakes(400, 400);}
 }
 
 void entrance(){
+  ini.encoder1Pos=0;
+  ini.encoder2Pos=0;
+  while (ini.button() == 1) {md.setBrakes(400,400);}
   moveTime(60, 60, 300);
-  while(abs(ini.encoder1Pos) < 1200){
+  while(abs(ini.encoder1Pos) < 1300 && ini.button() == 0){
     constSpeeds(60);
   }
   md.setBrakes(400, 400);
   delay(200);
-  moveCounts(50, -50, 450);
+  while (ini.button() == 1) {md.setBrakes(400,400);}
+  moveCounts(50, -50, 430);
+  while (ini.button() == 1) {md.setBrakes(400,400);}
   moveCounts(-50, -50, 200);
-  moveCounts(50, -50, 900);
+  while (ini.button() == 1) {md.setBrakes(400,400);}
+  moveCounts(50, -50, 860);
+  while (ini.button() == 1) {md.setBrakes(400,400);}
   moveTime(-80, -80, 2000);
   delay(300);
+  if (36.5<rightAvg()<37.5) { Serial.println("Center");}
+  else { int currentValue = rightAvg();
+    moveCounts(50, 50, 200);
+    moveCounts(50, -50, 430);
+    moveCounts(50, 50, currentValue - rightAvg()*23);
+  }
+  
 }
 
 void scan() {
@@ -138,6 +167,19 @@ while(!halt) {
 //  md.setBrakes(400, 400);  
 }
 
+float rightAvg() {
+  if (samples<=20) {
+    total = total + irRight.distance();
+    samples++;
+  }
+  else {
+    avg = total/20;
+    samples = 0;
+    total = 0;
+  }
+    return avg;
+}
+
 
 void printIR(){
   Serial.print("Front:");
@@ -159,15 +201,15 @@ void moveCounts(int motor1Speed, int motor2Speed, long counts){
   ini.encoder2Pos=0;
   stopIfFault();
   if(motor1Speed==0){  //when only right motor is moving
-    while(abs(ini.encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder2Pos)<counts && ini.button() == 0){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      //Serial.println(abs(ini.encoder2Pos));
+      Serial.println(abs(ini.encoder2Pos));
     }
    }
   else{
-    while(abs(ini.encoder1Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder1Pos)<counts && ini.button() == 0){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      //Serial.println(abs(ini.encoder1Pos));
+      Serial.println(abs(ini.encoder1Pos));
     }
    } 
   //Serial.println(counts);
