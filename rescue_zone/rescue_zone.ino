@@ -20,7 +20,7 @@ void doEncoderB1(){ini.PastB1=!ini.PastB1;}
 void doEncoderB2(){ini.PastB2=!ini.PastB2;}
 
 int rightDist, leftDist;
-long distTravelled;
+long distTrav;
 
 long currentPos1 = 0;
 long currentPos2 = 0;
@@ -63,34 +63,18 @@ void loop()
 {
   stopIfFault();
   if(ini.button() == 0 && done == false && prevState == 1){
+    ini.encoder1Pos = 0;
+    while(ini.button() == 0){
+      md.setSpeeds(40, 40);
+      Serial.println(ini.encoder1Pos);
+    }
     currentDist = irLeft.distance();
     previousDist = currentDist; 
     while(ini.button() == 0){
-      if(irLeft.distance() < 40){
-        if(maxDist - irLeft.distance() > 10){
-          break;
-        }
-      }else if(maxDist - irLeft.distance() > 15){
-        break;
-      }
-      sumdx = 0;
-      md.setSpeeds(40, 40);
-      Serial.print(maxDist);
-      Serial.print("   ");
-      Serial.println(maxDist - irLeft.distance());
-      for(int i = 0; i < 15; i++){
-        currentDist = irLeft.distance();
-        dx = currentDist - previousDist;
-        sumdx += dx; 
-        previousDist = currentDist;
-      }
-      avedx = sumdx/15;
-      if(abs(avedx) < 0.1){
-        maxDist = currentDist;
-      }
+
     }
     while(ini.button() == 0){
-    md.setBrakes(400, 400);
+      md.setBrakes(400, 400);
     }
     //entrance();
     //scan();
@@ -124,15 +108,60 @@ void entrance(){
   }
   
 
-void scan() {
-  
-  moveTime(40, 40, 200);
-  while(irLeft.distance()>rightDist){
-      md.setSpeeds(40, 40);
-      //distTravelled = distTravelled + dtheta1;
+void scanLeft(){
+  float currentDist;
+  float previousDist;
+  float maxDist;
+  float dx;
+  float sumdx;
+  float avedx;
+  if(irLeft.distance() < 40){
+    if(maxDist - irLeft.distance() > 10){
+      break;
+    }
+  }else if(maxDist - irLeft.distance() > 15){
+    break;
   }
-  md.setBrakes(400, 400);
-  ballCollectRight();
+  sumdx = 0;
+  md.setSpeeds(40, 40);;
+  for(int i = 0; i < 15; i++){
+    currentDist = irLeft.distance();
+    dx = currentDist - previousDist;
+    sumdx += dx; 
+    previousDist = currentDist;
+  }
+  avedx = sumdx/15;
+  if(abs(avedx) < 0.1){
+    maxDist = currentDist;
+  }
+}
+
+void scanRight(){
+  float currentDist;
+  float previousDist;
+  float maxDist;
+  float dx;
+  float sumdx;
+  float avedx;
+  if(irRight.distance() < 40){
+    if(maxDist - irRight.distance() > 10){
+      break;
+    }
+  }else if(maxDist - irRight.distance() > 15){
+    break;
+  }
+  sumdx = 0;
+  md.setSpeeds(40, 40);
+  for(int i = 0; i < 15; i++){
+    currentDist = irRight.distance();
+    dx = currentDist - previousDist;
+    sumdx += dx; 
+    previousDist = currentDist;
+  }
+  avedx = sumdx/15;
+  if(abs(avedx) < 0.1){
+    maxDist = currentDist;
+  }
 }
 
 
