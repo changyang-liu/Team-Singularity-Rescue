@@ -5,6 +5,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 #include <initLib.h>
+#include <MotorFunctions.h>
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
@@ -13,6 +14,7 @@ Initialization ini;
 SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 SharpIR irLeft = SharpIR(A10);
+Motors mtr;
 
 void doEncoderA1(){ini.PastB1?ini.encoder1Pos--:ini.encoder1Pos++;}
 void doEncoderA2(){ini.PastB2?ini.encoder2Pos--:ini.encoder2Pos++;}
@@ -88,7 +90,6 @@ void entrance(){
   delay(300);
   }
   
-}
 
 void scan() {
   rightDist = irRight.distance() - 5;
