@@ -5,7 +5,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 #include <initLib.h>
-#include <MotorFunctions.h>
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
@@ -14,7 +13,6 @@ Initialization ini;
 SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 SharpIR irLeft = SharpIR(A10);
-Motors mtr;
 
 void doEncoderA1(){ini.PastB1?ini.encoder1Pos--:ini.encoder1Pos++;}
 void doEncoderA2(){ini.PastB2?ini.encoder2Pos--:ini.encoder2Pos++;}
@@ -54,14 +52,49 @@ void setup(){
 
 //23 counts is roughly 1 cm (adjusted for inertia) at speed 60
 
+float currentDist;
+float previousDist;
+float maxDist;
+float dx;
+float sumdx;
+float avedx;
+
 void loop() 
 {
   stopIfFault();
-  Serial.println(rightAvg());
   if(ini.button() == 0 && done == false && prevState == 1){
+    currentDist = irLeft.distance();
+    previousDist = currentDist; 
+    while(ini.button() == 0){
+      if(irLeft.distance() < 40){
+        if(maxDist - irLeft.distance() > 10){
+          break;
+        }
+      }else if(maxDist - irLeft.distance() > 15){
+        break;
+      }
+      sumdx = 0;
+      md.setSpeeds(40, 40);
+      Serial.print(maxDist);
+      Serial.print("   ");
+      Serial.println(maxDist - irLeft.distance());
+      for(int i = 0; i < 15; i++){
+        currentDist = irLeft.distance();
+        dx = currentDist - previousDist;
+        sumdx += dx; 
+        previousDist = currentDist;
+      }
+      avedx = sumdx/15;
+      if(abs(avedx) < 0.1){
+        maxDist = currentDist;
+      }
+    }
+    while(ini.button() == 0){
+    md.setBrakes(400, 400);
+    }
     //entrance();
     //scan();
-    done = true;
+    //done = true;
   }
   else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
   else if(ini.button() == 1 && done == true) {done = false; prevState = 0;}
@@ -92,11 +125,9 @@ void entrance(){
   
 
 void scan() {
-  rightDist = irRight.distance() - 5;
-  leftDist = 80 - rightDist;
-  distTravelled = 0;
+  
   moveTime(40, 40, 200);
-  while(irRight.distance()>rightDist){
+  while(irLeft.distance()>rightDist){
       md.setSpeeds(40, 40);
       //distTravelled = distTravelled + dtheta1;
   }
@@ -116,66 +147,7 @@ void ballCollectRight(){
   long start_time = millis();
   long threshold = 100;
   boolean halt = false;
-
-  
-while(!halt) {
-    md.setSpeeds(40,-40);
-//    Serial.print("Millis: ");
-//    Serial.print(millis());
-//    Serial.print(" Start: ");
-//    Serial.println(start_time);
-    Serial.println(irFront.distance());
-
-//    if (irFront.distance() >= rightDist - 5) {
-//      
-//      if (millis() - start_time > threshold) {
-////        md.setBrakes(400,400);
-////        moveTime(-40,40,(millis()-start_time)/2);
-////        md.setBrakes(400, 400);
-////        moveTime(40, 40, 200);
-////        while(irFront.distance()>10){
-////          md.setSpeeds(40, 40);
-////        }
-////        md.setBrakes(400, 400); 
-//        halt = true;
-//      } else {
-//        start_time = millis();
-//      }
-//    }
-//
-  }
-//  while (1) {
-//       md.setBrakes(400,400);
-//  }
- 
-
-
-
-  
-//  while(irFront.distance()>=rightDist){
-//    md.setSpeeds(40, -40);
-//  }
-//  md.setBrakes(400, 400);
-//  moveTime(40, 40, 200);
-//  while(irFront.distance()>10){
-//    md.setSpeeds(40, 40);
-//  }
-//  md.setBrakes(400, 400);  
 }
-
-float rightAvg() {
-  if (samples<=20) {
-    total = total + irRight.distance();
-    samples++;
-  }
-  else {
-    avg = total/20;
-    samples = 0;
-    total = 0;
-  }
-    return avg;
-}
-
 
 void printIR(){
   Serial.print("Front:");
@@ -195,20 +167,18 @@ void testEncoders(){
 void moveCounts(int motor1Speed, int motor2Speed, long counts){
   ini.encoder1Pos=0;
   ini.encoder2Pos=0;
-  stopIfFault();
   if(motor1Speed==0){  //when only right motor is moving
-    while(abs(ini.encoder2Pos)<counts && ini.button() == 0){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      Serial.println(abs(ini.encoder2Pos));
+    Serial.println(ini.encoder1Pos);
     }
    }
   else{
-    while(abs(ini.encoder1Pos)<counts && ini.button() == 0){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
+    while(abs(ini.encoder1Pos)<counts ){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      Serial.println(abs(ini.encoder1Pos));
+    Serial.println(ini.encoder1Pos);
     }
    } 
-  //Serial.println(counts);
   md.setBrakes(400, 400);
   delay(200);
   ini.encoder1Pos=0;
@@ -218,23 +188,19 @@ void moveCounts(int motor1Speed, int motor2Speed, long counts){
 void moveDegs(int motor1Speed, int motor2Speed, int degs){
   ini.encoder1Pos=0;
   ini.encoder2Pos=0;
-  stopIfFault();
   unsigned long counts;
   if(motor1Speed==0){  //when only right motor is moving
     counts = (long)(degs*55/36+(100-motor2Speed)*0.3);
     while(abs(ini.encoder2Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      //Serial.println(abs(ini.encoder2Pos));
     }
    }
   else{
     counts = (long)(degs*55/36+(100-motor1Speed)*0.3);
     while(abs(ini.encoder1Pos)<counts){ //470 for 400, 500 for 200, 530 for 100 (about -30 counts per 100 Speed)  
       md.setSpeeds(motor1Speed, motor2Speed);
-      //Serial.println(abs(ini.encoder1Pos));
     }
-   } 
-  //Serial.println(counts);
+   }
   md.setBrakes(400, 400);
   delay(200);
   ini.encoder1Pos=0;
@@ -243,15 +209,28 @@ void moveDegs(int motor1Speed, int motor2Speed, int degs){
 
 void moveTime(int motor1Speed, int motor2Speed, long t){
   long elapsedtime=0;
-  stopIfFault();
   long starttime=millis();
   while(elapsedtime<t){ 
     md.setSpeeds(motor1Speed, motor2Speed);
     elapsedtime=millis()-starttime;
-    //Serial.println(elapsedtime);
    } 
   md.setBrakes(400, 400);
  }
+
+ void constSpeeds(int spd){ 
+  float motor1Speed = spd;
+  float motor2Speed = spd;
+  currentPos1 = abs(ini.encoder1Pos);
+  currentPos2 = abs(ini.encoder2Pos);
+  dtheta1 = currentPos1 - previousPos1;
+  dtheta2 = currentPos2 - previousPos2;
+  previousPos1 = currentPos1;
+  previousPos2 = currentPos2;
+  if(dtheta1 == 0){dtheta1 = 1;}
+  if(dtheta2 == 0){dtheta2 = 1;}
+  motor2Speed = (dtheta1/dtheta2)*motor2Speed;
+  md.setSpeeds(motor1Speed, motor2Speed);
+}
 
 void stopIfFault()
 {
@@ -266,30 +245,3 @@ void stopIfFault()
     while(1);
   }
 }
-
-void constSpeeds(int spd){ // find rotational Speed
-  float motor1Speed = spd;
-  float motor2Speed = spd;
-  stopIfFault();
-  currentPos1 = abs(ini.encoder1Pos);
-  currentPos2 = abs(ini.encoder2Pos);
-  dtheta1 = currentPos1 - previousPos1;
-//  Serial.print("dtheta1: ");
-//  Serial.print(dtheta1);
-  dtheta2 = currentPos2 - previousPos2;
-//  Serial.print(" dtheta2: ");
-//  Serial.print(dtheta2);
-//  Serial.print(" 1Speed: ");
-//  Serial.print(motor1Speed);
-  previousPos1 = currentPos1;
-  previousPos2 = currentPos2;
-  if(dtheta1 == 0){dtheta1 = 1;}
-  if(dtheta2 == 0){dtheta2 = 1;}
-  motor2Speed = (dtheta1/dtheta2)*motor2Speed;
-//  Serial.print(" 2Speed: ");
-//  Serial.println(motor2Speed);
-  md.setSpeeds(motor1Speed, motor2Speed);
-  delay(50);
-}
-
-
