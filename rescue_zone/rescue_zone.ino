@@ -86,11 +86,6 @@ void entrance(){
   while (ini.button() == 1) {md.setBrakes(400,400);}
   moveTime(-80, -80, 2000);
   delay(300);
-  if (36.5<rightAvg()<37.5) { Serial.println("Center");}
-  else { int currentValue = rightAvg();
-    moveCounts(50, 50, 200);
-    moveCounts(50, -50, 430);
-    moveCounts(50, 50, currentValue - rightAvg()*23);
   }
   
 }
