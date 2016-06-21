@@ -13,7 +13,7 @@ DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
 PIDe_Array pid = PIDe_Array(1.6,0.03,90,0.09,10);
-PIDe_Single single = PIDe_Single(50, 1);
+PIDe_Single single = PIDe_Single(50, 1); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
 
@@ -64,8 +64,7 @@ void loop(){
     int far_right = light.scale4();
 
     
-//  if(true)    obstacle code
-//    //digitalRead(ini.touchSensorPin) == 1) {
+//  if(digitalRead(ini.touchSensorPin) == 1) {      obstacle code
 //    md.setBrakes(400, 400);
 //    delay(200);
 //    moveCounts(-60, -60, 260);
