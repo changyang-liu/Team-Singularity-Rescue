@@ -24,23 +24,23 @@ void Motors::moveCounts(int motor1Speed, int motor2Speed, long counts){
 	_motor2Speed = motor2Speed;
 	_counts = counts;
 	
-	_encoder1Pos = 0;
-	_encoder2Pos = 0;
+	encoder1Pos = 0;
+	encoder2Pos = 0;
 	
 	if (_motor1Speed == 0) {
-		while(abs(_encoder2Pos) < _counts) {
+		while(abs(encoder2Pos) < _counts) {
 			_md.setSpeeds(_motor1Speed, _motor2Speed);
 		}
 	} else {
-		while(abs(_encoder1Pos) < _counts) {
+		while(abs(encoder1Pos) < _counts) {
 			_md.setSpeeds(_motor1Speed, _motor2Speed);
 		}
 	}
 	
 	_md.setBrakes(400,400);
 	delay(200);
-	_encoder1Pos = 0;
-	_encoder2Pos = 0;
+	encoder1Pos = 0;
+	encoder2Pos = 0;
 }
 
 void Motors::moveDegs(int motor1Speed, int motor2Speed, int degs){
@@ -48,24 +48,24 @@ void Motors::moveDegs(int motor1Speed, int motor2Speed, int degs){
 	_motor2Speed = motor2Speed;
 	_degs = degs;
 	
-	_encoder1Pos = 0;
-	_encoder2Pos = 0;
+	encoder1Pos = 0;
+	encoder2Pos = 0;
 	
 	if (_motor1Speed == 0) {
 		_deg_counts = (long) (_degs*55/36+(100-_motor2Speed)*0.3);
-		while(abs(_encoder1Pos) < _deg_counts) {
+		while(abs(encoder1Pos) < _deg_counts) {
 			_md.setSpeeds(_motor1Speed,_motor2Speed);
 		}
 	} else {
 		_deg_counts = (long) (_degs*55/36+(100-motor1Speed)*0.3);
-		while(abs(_encoder1Pos) < _deg_counts) {
+		while(abs(encoder1Pos) < _deg_counts) {
 			_md.setSpeeds(_motor1Speed,_motor2Speed);
 		}
 	}
 	_md.setBrakes(400,400);
 	delay(200);
-	_encoder1Pos = 0;
-	_encoder2Pos = 0;
+	encoder1Pos = 0;
+	encoder2Pos = 0;
 }
 
 void Motors::moveTime(int motor1Speed, int motor2Speed, long t){
@@ -88,8 +88,8 @@ void Motors::moveTime(int motor1Speed, int motor2Speed, long t){
 	_motor1Float = _spd;
 	_motor2Float = _spd;
 	
-	_currentPos1 = abs(_encoder1Pos);
-	_currentPos2 = abs(_encoder2Pos);
+	_currentPos1 = abs(encoder1Pos);
+	_currentPos2 = abs(encoder2Pos);
 	
 	_dtheta1 = _currentPos1 - _previousPos1;
 	_dtheta2 = _currentPos2 - _previousPos2;
@@ -131,10 +131,10 @@ boolean Motors::getPastB2() {return _PastB2;}
 void Motors::setPastB1(boolean b1) {_PastB1 = b1;}
 void Motors::setPastB2(boolean b2) {_PastB2 = b2;}
 
-void Motors::addEncoder1() {_encoder1Pos++;}
-void Motors::addEncoder2() {_encoder2Pos++;}
-void Motors::subtrEncoder1() {_encoder1Pos--;}
-void Motors::subtrEncoder2() {_encoder2Pos--;}
+void Motors::addEncoder1() {encoder1Pos++;}
+void Motors::addEncoder2() {encoder2Pos++;}
+void Motors::subtrEncoder1() {encoder1Pos--;}
+void Motors::subtrEncoder2() {encoder2Pos--;}
 
 
 

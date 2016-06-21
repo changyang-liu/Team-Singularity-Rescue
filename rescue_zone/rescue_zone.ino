@@ -68,9 +68,7 @@ float avedx;
 void loop()
 {
   mtr.stopIfFault();
-
   if (ini.button() == 0 && done == false && prevState == 1) {
-    
     
     //currentDist = irLeft.distance();
     //previousDist = currentDist;
@@ -94,11 +92,11 @@ void loop()
 }
 
 void entrance() {
-  ini.encoder1Pos = 0;
-  ini.encoder2Pos = 0;
+  mtr.encoder1Pos = 0;
+  mtr.encoder2Pos = 0;
   while (ini.button() == 1) {md.setBrakes(400, 400);}
   mtr.moveTime(60, 60, 300);
-  while (abs(ini.encoder1Pos) < 1300 && ini.button() == 0) {
+  while (abs(mtr.encoder1Pos) < 1300 && ini.button() == 0) {
     mtr.constSpeeds(60);
   }
   md.setBrakes(400, 400);
