@@ -20,12 +20,7 @@ void PIDe_Array::update(int far_left, int close_left, int close_right, int far_r
 	_right_ave = (_far_right + _close_right)/2;
 	
 	_error = _left_ave - _right_ave;
-	if (_integral*_error < 0) {
-		_integral = 0;
-	} else {
-		_integral = _integral*_integral_factor + _error;
-	}
-	
+	_integral = _integral*_integral_factor + _error;
 	_derivative = _error - _prev_error;
 	
 	if (abs(_integral) > _max_integral) {

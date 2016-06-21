@@ -6,11 +6,9 @@ Initialization::Initialization() {}
 
 
 void Initialization::initialize () {
-   pinMode(buttonPin,INPUT_PULLUP);
+  pinMode(buttonPin,INPUT_PULLUP);
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
-
-  pinMode(greenPin,OUTPUT);
   pinMode(redPin, OUTPUT);
   
   
@@ -44,6 +42,6 @@ void Initialization::initialize () {
 
 int Initialization::button()
 {
-	return digitalRead(17);
+	return digitalRead(buttonPin);
 }
 

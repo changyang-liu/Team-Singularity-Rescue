@@ -21,7 +21,7 @@ class Initialization {
 		
 		volatile long encoder1Pos = 0, encoder2Pos = 0;
 		volatile boolean PastA1 = 0, PastA2 = 0, PastB1 = 0, PastB2 = 0;
-		int buttonPin = 17, greenPin = 51, redPin = 50, touchSensorPin = 52, foilPin = 27;
+		int buttonPin = 53, redPin = 50, touchSensorPin = 51, foilPin = 27;
 
 };
 

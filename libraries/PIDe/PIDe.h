@@ -33,7 +33,7 @@ class PIDe_Array {
 		float _integral_factor = 0.8;
 			
 		float _variable_speed;
-		float _kd_ratio = 1;
+		float _kd_ratio = 0.65;
 		
 		float _speed1, _speed2;
 };
