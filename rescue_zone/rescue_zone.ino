@@ -19,18 +19,10 @@ Motors mtr = Motors(md);
 int rightDist, leftDist;
 long distTrav;
 
-void doEncoderA1() {
-  mtr.getPastB1() ? mtr.subtrEncoder1() : mtr.addEncoder1();
-}
-void doEncoderA2() {
-  mtr.getPastB2() ? mtr.subtrEncoder2() : mtr.addEncoder2();
-}
-void doEncoderB1() {
-  mtr.setPastB1(!mtr.getPastB1());
-}
-void doEncoderB2() {
-  mtr.setPastB2(!mtr.getPastB2());
-}
+void doEncoderA1() {mtr.getPastB1() ? mtr.subtrEncoder1() : mtr.addEncoder1();}
+void doEncoderA2() {mtr.getPastB2() ? mtr.subtrEncoder2() : mtr.addEncoder2();}
+void doEncoderB1() {mtr.setPastB1(!mtr.getPastB1());}
+void doEncoderB2() {mtr.setPastB2(!mtr.getPastB2());}
 
 long currentPos1 = 0;
 long currentPos2 = 0;
@@ -76,9 +68,9 @@ float avedx;
 void loop()
 {
   mtr.stopIfFault();
+
   if (ini.button() == 0 && done == false && prevState == 1) {
     
-    mtr.moveCounts(60, 60, 100);
     
     //currentDist = irLeft.distance();
     //previousDist = currentDist;

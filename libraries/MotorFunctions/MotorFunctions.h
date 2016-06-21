@@ -31,6 +31,8 @@ class Motors{
 		void subtrEncoder1();
 		void subtrEncoder2();
 		
+		volatile long encoder1Pos = 0, encoder2Pos = 0;
+		
 		
 	private:
 		long _currentPos1 = 0;
@@ -44,7 +46,6 @@ class Motors{
 		int _encoder2PinA = 20;
 		int _encoder2PinB = 21;
 		
-		volatile long _encoder1Pos = 0, _encoder2Pos = 0;
 		volatile boolean _PastA1 = 0, _PastA2 = 0, _PastB1 = 0, _PastB2 = 0;
 		
 		DualVNH5019MotorShield _md;
