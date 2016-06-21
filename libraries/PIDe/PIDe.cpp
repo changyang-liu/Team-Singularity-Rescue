@@ -1,16 +1,20 @@
 #include "Arduino.h"
-#include "PIDe.h"
+#include <PIDe.h>
+#include <DualVNH5019MotorShield.h>
 
-PIDe_Array::PIDe_Array(float kp, float ki, float maximum, float gradient, float half_x) {
+PIDe_Array::PIDe_Array(DualVNH5019MotorShield md, float kp, float ki, float kd_ratio, float maximum, float gradient, float half_x) {
+	_md = md;
+	
 	_kp = kp;
 	_ki = ki;
+	_kd_ratio = kd_ratio;
 	
 	_maximum = maximum;
 	_gradient = gradient;
 	_half_x = half_x;
 }
 
-void PIDe_Array::update(int far_left, int close_left, int close_right, int far_right) {
+void PIDe_Array::track(int far_left, int close_left, int close_right, int far_right) {
 	_far_left = far_left;
 	_close_left = close_left;
 	_close_right = close_right;
@@ -23,13 +27,13 @@ void PIDe_Array::update(int far_left, int close_left, int close_right, int far_r
 	_integral = _integral*_integral_factor + _error;
 	_derivative = _error - _prev_error;
 	
-	if (abs(_integral) > _max_integral) {
-		if (_integral >= 0) {
-			_integral = _max_integral;
-		} else {
-			_integral = -_max_integral;
-		}
-	}
+	// if (abs(_integral) > _max_integral) {
+		// if (_integral >= 0) {
+			// _integral = _max_integral;
+		// } else {
+			// _integral = -_max_integral;
+		// }
+	// }
 	
 	_variable_speed = _maximum/(1+pow(e,_gradient*(abs(_error)-_half_x)));
 	_turn = _kp*_error + _ki*_integral + _variable_speed*_kd_ratio*_derivative;
@@ -38,14 +42,8 @@ void PIDe_Array::update(int far_left, int close_left, int close_right, int far_r
 	
 	_speed1 = _variable_speed + _turn;
 	_speed2 = _variable_speed - _turn;
-}
-
-float PIDe_Array::speed1() {
-	return _speed1;
-}
-
-float PIDe_Array::speed2() {
-	return _speed2;
+	
+	_md.setSpeeds(_speed1,_speed2);
 }
 
 void PIDe_Array::debug() {
@@ -57,12 +55,13 @@ void PIDe_Array::debug() {
 	Serial.println(_variable_speed);
 }
 
-PIDe_Single::PIDe_Single(int base, int p) {
+PIDe_Single::PIDe_Single(DualVNH5019MotorShield md, int base, int p) {
+	_md = md;
 	_base = base;
 	_p = p;
 }
 
-void PIDe_Single::update(int side, int close_left, int close_right) {
+void PIDe_Single::track(int side, int close_left, int close_right) {
 	_close_left = close_left;
 	_close_right = close_right;
 	
@@ -79,11 +78,6 @@ void PIDe_Single::update(int side, int close_left, int close_right) {
 		_speed1 = _base - _turn;
 		_speed2 = _base + _turn;
 	}
+	
+	_md.setSpeeds(_speed1,_speed2);
 }
-
-float PIDe_Single::speed1() {
-	return _speed1;
-}
-float PIDe_Single::speed2() {
-	 return _speed2;
- }
