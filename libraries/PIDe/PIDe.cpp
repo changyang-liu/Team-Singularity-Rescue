@@ -14,14 +14,14 @@ PIDe_Array::PIDe_Array(DualVNH5019MotorShield md, float kp, float ki, float kd_r
 	_half_x = half_x;
 }
 
-void PIDe_Array::track(int far_left, int close_left, int close_right, int far_right) {
+void PIDe_Array::track(float far_left, float close_left, float close_right, float far_right) {
 	_far_left = far_left;
 	_close_left = close_left;
 	_close_right = close_right;
 	_far_right = far_right;
 
-	_left_ave = (_far_left + _close_left)/2;
-	_right_ave = (_far_right + _close_right)/2;
+	_left_ave = (_far_left + _close_left*1.5)/2.5;
+	_right_ave = (_far_right + _close_right*1.5)/2.5;
 	
 	_error = _left_ave - _right_ave;
 	_integral = _integral*_integral_factor + _error;
@@ -35,8 +35,9 @@ void PIDe_Array::track(int far_left, int close_left, int close_right, int far_ri
 		// }
 	// }
 	
-	_variable_speed = _maximum/(1+pow(e,_gradient*(abs(_error)-_half_x)));
+	
 	_turn = _kp*_error + _ki*_integral + _variable_speed*_kd_ratio*_derivative;
+	_variable_speed = _maximum/(1+pow(e,_gradient*(abs(_turn)-_half_x)));
 	
 	_prev_error = _error;
 	
@@ -61,7 +62,7 @@ PIDe_Single::PIDe_Single(DualVNH5019MotorShield md, int base, int p) {
 	_p = p;
 }
 
-void PIDe_Single::track(int side, int close_left, int close_right) {
+void PIDe_Single::track(int side, float close_left, float close_right) {
 	_close_left = close_left;
 	_close_right = close_right;
 	
