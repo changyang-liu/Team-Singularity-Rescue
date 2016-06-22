@@ -1,3 +1,4 @@
+#include <Servo.h>
 #include <IR.h>
 #include <Scaled.h>
 #include <DualVNH5019MotorShield.h> // from https://github.com/pololu/dual-vnh5019-motor-shield
@@ -15,6 +16,7 @@ SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 SharpIR irLeft = SharpIR(A10);
 Motors mtr = Motors(md);
+Servo myservo;
 
 int rightDist, leftDist;
 long distTrav;
@@ -23,14 +25,6 @@ void doEncoderA1() {mtr.getPastB1() ? mtr.subtrEncoder1() : mtr.addEncoder1();}
 void doEncoderA2() {mtr.getPastB2() ? mtr.subtrEncoder2() : mtr.addEncoder2();}
 void doEncoderB1() {mtr.setPastB1(!mtr.getPastB1());}
 void doEncoderB2() {mtr.setPastB2(!mtr.getPastB2());}
-
-long currentPos1 = 0;
-long currentPos2 = 0;
-long previousPos1 = 0;
-long previousPos2 = 0;
-
-float dtheta1;
-float dtheta2;
 
 boolean done;
 int prevState;
@@ -44,6 +38,9 @@ long RLightTotal;
 long LLightAvg;
 long RLightAvg;
 int LDRsamples = 200;
+
+bool ballAtLeft = 0;
+bool ballAtRight = 0;
 
 void setup() {
   ini.initialize();
@@ -75,10 +72,22 @@ void loop()
 {
   mtr.stopIfFault();
   if (ini.button() == 0 && done == false && prevState == 1) {
+    entrance();
+    while(ini.button() == 0){
+      scanLeft();
+      scanRight();
+      if(ballAtLeft == 1 || ballAtRight == 1){
+        break;
+      }
+    }
+    if(ballAtLeft == 1){
+      ballCollectLeft();
+    }else if(ballAtRight == 1){
+      ballCollectRight();
+    }
     
     //currentDist = irLeft.distance();
     //previousDist = currentDist;
-    entrance();
     //scan();
     //done = true;
   }
@@ -125,10 +134,10 @@ void scanLeft() {
   float avedx;
   if (irLeft.distance() < 40) {
     if (maxDist - irLeft.distance() > 10) {
-      //break;
+      ballAtLeft = 1;
     }
   } else if (maxDist - irLeft.distance() > 15) {
-    //break;
+      ballAtLeft = 1;
   }
   sumdx = 0;
   md.setSpeeds(40, 40);;
@@ -153,10 +162,10 @@ void scanRight() {
   float avedx;
   if (irRight.distance() < 40) {
     if (maxDist - irRight.distance() > 10) {
-      //break;
+      ballAtRight = 1;
     }
-  } else if (maxDist - irRight.distance() > 15) {
-    //break;
+  }else if (maxDist - irRight.distance() > 15) {
+    ballAtRight = 1;
   }
   sumdx = 0;
   md.setSpeeds(40, 40);
@@ -174,6 +183,7 @@ void scanRight() {
 
 
 void ballCollectLeft() {
+  
 
 }
 
@@ -205,3 +215,21 @@ LLightAvg = LLightTotal/LDRsamples;
 RLightAvg = RLightTotal/LDRsamples;
 }
 
+void servoPos(int newPos){
+  int currentPos = myservo.read();
+  if(currentPos < newPos){
+    for (int pos = currentPos; pos < newPos; pos++) { 
+      myservo.write(pos);              // tell servo to go to position in variable 'pos'
+      delay(30);
+    }   
+  }else{
+    for (int pos = currentPos; pos > newPos; pos--) { // goes from 180 degrees to 0 degrees
+      myservo.write(pos);              // tell servo to go to position in variable 'pos'
+      if(pos > 60){
+        delay(30);  
+      }else{
+        delay(10);
+      }
+    }
+  }
+}

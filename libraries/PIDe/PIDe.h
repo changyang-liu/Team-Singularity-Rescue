@@ -7,7 +7,7 @@
 class PIDe_Array {
 	public:
 		PIDe_Array(DualVNH5019MotorShield md, float kp, float ki, float kd_ratio, float maximum, float gradient, float half_x);
-		void track(int far_left, int close_left, int close_right, int far_right);
+		void track(float far_left, float close_left, float close_right, float far_right);
 		void debug();
 		
 		const double e = 2.71828;
@@ -15,7 +15,7 @@ class PIDe_Array {
 	private:
 		DualVNH5019MotorShield _md;
 	
-		int _far_left, _close_left, _close_right, _far_right;
+		float _far_left, _close_left, _close_right, _far_right;
 		float _left_ave, _right_ave;
 		float _error, _turn;
 		
@@ -42,12 +42,12 @@ class PIDe_Array {
 class PIDe_Single{
 	public:
 		PIDe_Single(DualVNH5019MotorShield md, int base, int p);
-		void track(int side, int close_left, int close_right);
+		void track(int side, float close_left, float close_right);
 		
 	private:
 		DualVNH5019MotorShield _md;
 		
-		int _close_left, _close_right;
+		float _close_left, _close_right;
 		int _base, _p, _side;
 		
 		long start_time;
