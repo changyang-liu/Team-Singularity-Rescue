@@ -39,6 +39,12 @@ int samples;
 float total;
 float avg;
 
+long LLightTotal;
+long RLightTotal;
+long LLightAvg;
+long RLightAvg;
+int LDRsamples = 200;
+
 void setup() {
   ini.initialize();
   attachInterrupt(digitalPinToInterrupt(mtr.getEncoder1PinA()), doEncoderA1, RISING);
@@ -72,23 +78,14 @@ void loop()
     
     //currentDist = irLeft.distance();
     //previousDist = currentDist;
-    //entrance();
+    entrance();
     //scan();
     //done = true;
   }
-  else if (ini.button() == 0 && done == true) {
-    md.setBrakes(400, 400);
-  }
-  else if (ini.button() == 1 && done == true) {
-    done = false;
-    prevState = 1;
-  }
-  else if (ini.button() == 1 && prevState == 0) {
-    prevState = 1;
-  }
-  else {
-    md.setBrakes(400, 400);
-  }
+  else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
+  else if (ini.button() == 1 && done == true) {done = false; prevState = 1;}
+  else if (ini.button() == 1 && prevState == 0) {prevState = 1;}
+  else {md.setBrakes(400, 400);}
 }
 
 void entrance() {
@@ -96,20 +93,26 @@ void entrance() {
   mtr.encoder2Pos = 0;
   while (ini.button() == 1) {md.setBrakes(400, 400);}
   mtr.moveTime(60, 60, 300);
-  while (abs(mtr.encoder1Pos) < 1300 && ini.button() == 0) {
-    mtr.constSpeeds(60);
+  while (abs(mtr.encoder1Pos) < 1650 && ini.button() == 0) {
+    md.setSpeeds(60, 60);
   }
   md.setBrakes(400, 400);
-  delay(200);
-  while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveCounts(50, -50, 430);
-  while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveCounts(-50, -50, 200);
-  while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveCounts(50, -50, 860);
-  while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveTime(-80, -80, 2000);
-  delay(300);
+  delay(400);
+  LRavg();
+  if (RLightAvg <=720) {
+    mtr.moveCounts(-50, -50, 100);
+  }
+  delay(50000);
+  
+//  while (ini.button() == 1) {md.setBrakes(400, 400);}
+//  mtr.moveCounts(50, -50, 430);
+//  while (ini.button() == 1) {md.setBrakes(400, 400);}
+//  mtr.moveCounts(-50, -50, 200);
+//  while (ini.button() == 1) {md.setBrakes(400, 400);}
+//  mtr.moveCounts(50, -50, 860);
+//  while (ini.button() == 1) {md.setBrakes(400, 400);}
+//  mtr.moveTime(-80, -80, 2000);
+//  delay(300);
 }
 
 
@@ -190,5 +193,15 @@ void printIR() {
   Serial.print(irLeft.distance());
   Serial.print(" Right:");
   Serial.println(irRight.distance());
+}
+
+void LRavg() {
+LLightTotal = 0;
+RLightTotal = 0;
+for (int i=1; i<=LDRsamples;++i)
+{ LLightTotal = LLightTotal+=analogRead(A5);
+  RLightTotal = RLightTotal+=analogRead(A15);}
+LLightAvg = LLightTotal/LDRsamples;
+RLightAvg = RLightTotal/LDRsamples;
 }
 
