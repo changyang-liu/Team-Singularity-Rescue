@@ -1,3 +1,4 @@
+#include <EnableInterrupt.h>
 #include <IR.h>
 #include <Scaled.h>
 #include <DualVNH5019MotorShield.h> // from https://github.com/pololu/dual-vnh5019-motor-shield
@@ -13,7 +14,7 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
-PIDe_Array pid = PIDe_Array(md,1.8,0.4,1.5,120,0.035,30);
+PIDe_Array pid = PIDe_Array(md,1.8,0.4,1.5,70,0.035,30);
 PIDe_Single single = PIDe_Single(md,35, 3.5); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
@@ -27,27 +28,30 @@ void doEncoderA2(){mtr.getPastB2()?mtr.subtrEncoder2():mtr.addEncoder2();}
 void doEncoderB1(){mtr.setPastB1(!mtr.getPastB1());}
 void doEncoderB2(){mtr.setPastB2(!mtr.getPastB2());}
 
+int loops = 0;
+int maxloops = 200;
+
 void setup() {
   ini.initialize();
 
-  attachInterrupt(digitalPinToInterrupt(mtr.getEncoder1PinA()), doEncoderA1, RISING);
-  attachInterrupt(digitalPinToInterrupt(mtr.getEncoder2PinA()), doEncoderA2, RISING);
-  attachInterrupt(digitalPinToInterrupt(mtr.getEncoder1PinB()), doEncoderB1, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(mtr.getEncoder2PinB()), doEncoderB2, CHANGE);
+  enableInterrupt(mtr.getEncoder1PinA(), doEncoderA1, RISING);
+  enableInterrupt(mtr.getEncoder2PinA(), doEncoderA2, RISING);
+  enableInterrupt(mtr.getEncoder1PinB(), doEncoderB1, CHANGE);
+  enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
   !accel.begin();
   md.init();
 
 }
 
 void loop(){
-//  light.printlog();   //test values
-//// colour2.update();
+//  light.print();   //test values
+// colour2.update();
 //  colour3.update();
-////  Serial.print(colour2.r());
-////  Serial.print("  ");
-////  Serial.print(colour2.g());
-////  Serial.print("  ");
-////  Serial.print(colour2.b());
+//  Serial.print(colour2.r());
+//  Serial.print("  ");
+//  Serial.print(colour2.g());
+//  Serial.print("  ");
+//  Serial.print(colour2.b());
 //  Serial.print("  S2  ");
 //  Serial.print(colour3.r());
 //  Serial.print("  ");
@@ -55,7 +59,6 @@ void loop(){
 //  Serial.print("  ");
 //  Serial.println(colour3.b());
 
-  
   if(!ini.button()){
     int far_left = light.scale1();
     int close_left = light.scale2();
@@ -72,7 +75,19 @@ void loop(){
 //      md.setSpeeds(70, 40);
 //    }
 //  }
-  
+
+    if(loops == maxloops){
+      if(slope() == 1){
+        pid.setMaxSpeed(150);
+      }else if (slope() == -1){
+        pid.setMaxSpeed(10);
+      }else{
+        pid.setMaxSpeed(70);
+      }
+      //Serial.println(gradient);
+      loops = 0;
+    }
+    ++loops;
     if((far_left + close_left*1.5)/2.5 < 40 && (far_right + close_right*1.5)/2.5 < 40){
       md.setBrakes(400, 400);
       delay(500);
@@ -100,10 +115,10 @@ void loop(){
     }else{
       pid.track(far_left,close_left,close_right,far_right);
     }
-    
   }else{
   md.setBrakes(400, 400);
   }
+ 
 }
 
 
@@ -119,7 +134,38 @@ void singleTrack(int side, long t){
       single.track(2, light.scale2(), light.scale3()); 
     }
   }
-} 
+}
+
+float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.x;
+}
+
+float accelY(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.y;
+}
+
+float accelZ(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.z;
+}
+
+int slope(){                           //Function to detect uphill, downhill or flat
+if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
+  {
+  return 0;}
+  else
+  {
+    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
+    {return 1;}
+    else
+    {return -1;}
+  }
+}
 
 
 
