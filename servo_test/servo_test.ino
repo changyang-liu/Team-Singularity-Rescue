@@ -4,14 +4,13 @@ Servo myservo;
 
 
 void setup() {
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
-  servoPos(140);
-  delay(1000);
-  servoPos(0);
+  myservo.attach(10);  // attaches the servo on pin 9 to the servo object
+
 }
 
 void loop() {
-  //a
+  myservo.write(9);
+  
 }
 
 
