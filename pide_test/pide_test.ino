@@ -34,20 +34,20 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(mtr.getEncoder2PinA()), doEncoderA2, RISING);
   attachInterrupt(digitalPinToInterrupt(mtr.getEncoder1PinB()), doEncoderB1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(mtr.getEncoder2PinB()), doEncoderB2, CHANGE);
-  !accel.begin();
+  //!accel.begin();
   md.init();
 
 }
 
 void loop(){
 //  light.printlog();   //test values
-//// colour2.update();
+// colour2.update();
 //  colour3.update();
-////  Serial.print(colour2.r());
-////  Serial.print("  ");
-////  Serial.print(colour2.g());
-////  Serial.print("  ");
-////  Serial.print(colour2.b());
+//  Serial.print(colour2.r());
+//  Serial.print("  ");
+//  Serial.print(colour2.g());
+//  Serial.print("  ");
+//  Serial.print(colour2.b());
 //  Serial.print("  S2  ");
 //  Serial.print(colour3.r());
 //  Serial.print("  ");
@@ -78,6 +78,8 @@ void loop(){
       delay(500);
       colour2.update();
       if(70<colour2.r()<210 && 90<colour2.g()<235 && 75<colour2.b()<205 && abs(colour2.g()-colour2.r())>20 && abs(colour2.g()-colour2.b())>20) {
+        Serial.println("LGreen");
+        delay(1000);
         mtr.moveCounts(-50, -50, 50);
         delay(200);
         singleTrack(1, 1000);      //side, closeleft, closeright
@@ -85,6 +87,8 @@ void loop(){
       }
       colour3.update();
       if (70<colour3.r()<220 && 85<colour3.g()<230 && 75<colour3.b()<210 && abs(colour3.g()-colour3.r())>20 && abs(colour3.g()-colour3.b())>20) {
+        Serial.println("RGreen");
+        delay(1000);
         mtr.moveCounts(-50, -50, 50);
         delay(200);
         singleTrack(2, 1000);
