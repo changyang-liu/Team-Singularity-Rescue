@@ -47,6 +47,10 @@ void PIDe_Array::track(float far_left, float close_left, float close_right, floa
 	_md.setSpeeds(_speed1,_speed2);
 }
 
+void PIDe_Array::setMaxSpeed(int max_speed) {
+	_maximum = max_speed;
+}
+
 void PIDe_Array::debug() {
 	Serial.print("Error: ");
 	Serial.print(_error);
