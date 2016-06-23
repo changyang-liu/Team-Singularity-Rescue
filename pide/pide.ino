@@ -148,57 +148,20 @@ void singleTrack(int side, long t){
 
 void Lcolour(){
 	int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, LrAvg, LgAvg, LbAvg;
-	
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	
+  
+  for(int i = 0; i<20; i++){
+    colour2.update();
+  }
+  
 	Lr1 = colour2.r();
 	Lg1 = colour2.g();
 	Lb1 = colour2.b();
 	
 	delay(100);
-	
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
+
+  for(int i = 0; i<20; i++){
+    colour2.update();
+  }
 	
 	Lr2 = colour2.r();
 	Lg2 = colour2.g();
@@ -218,24 +181,9 @@ void Rcolour() {
 	
 	int Rr1, Rg1, Rb1, Rr2, Rg2, Rb2, RrAvg, RgAvg, RbAvg;
 
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
+  for(int i = 0; i<20; i++){
+    colour3.update();
+  }
 	
 	Rr1 = colour3.r();
 	Rg1 = colour3.g();
@@ -243,24 +191,9 @@ void Rcolour() {
 	
 	delay(100);
 	
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
+  for(int i = 0; i<20; i++){
+    colour3.update();
+  }
 	
 	Rr2 = colour3.r();
 	Rg2 = colour3.g();
