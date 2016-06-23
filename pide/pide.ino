@@ -9,7 +9,6 @@
 #include <PIDe.h>
 #include <ColourSensor.h>
 #include <MotorFunctions.h>
-#include <EnableInterrupt.h>
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
@@ -21,28 +20,20 @@ ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
 Motors mtr = Motors(md);
 
-int LGreen;
-int RGreen;
-
 int loops = 0;
 int maxloops = 200;
 
-int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, Rr1, Rg1, Rb1, Rr2, Rg2, Rb2, LrAvg, LgAvg, LbAvg, RrAvg, RgAvg, RbAvg;
+int LGreen;
+int RGreen;
 
 void doEncoderA1(){mtr.getPastB1()?mtr.subtrEncoder1():mtr.addEncoder1();}
 void doEncoderA2(){mtr.getPastB2()?mtr.subtrEncoder2():mtr.addEncoder2();}
 void doEncoderB1(){mtr.setPastB1(!mtr.getPastB1());}
 void doEncoderB2(){mtr.setPastB2(!mtr.getPastB2());}
 
-int loops = 0;
-int maxloops = 200;
-
 void setup() {
   ini.initialize();
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/master
   enableInterrupt(mtr.getEncoder1PinA(), doEncoderA1, RISING);
   enableInterrupt(mtr.getEncoder2PinA(), doEncoderA2, RISING);
   enableInterrupt(mtr.getEncoder1PinB(), doEncoderB1, CHANGE);
@@ -103,47 +94,42 @@ void loop(){
       loops = 0;
     }
     ++loops;
-<<<<<<< HEAD
   
     if((far_left + close_left)/2 < 40 && (far_right + close_right)/2 < 40){
-      md.setBrakes(400, 400);
-      Lcolour();
-      Rcolour();
+		md.setBrakes(400, 400);
+		Lcolour();
+		Rcolour();
 
-=======
-    if((far_left + close_left*1.5)/2.5 < 40 && (far_right + close_right*1.5)/2.5 < 40){
-      md.setBrakes(400, 400);
-      delay(500);
-      colour2.update();
-      if(70<colour2.r()<210 && 90<colour2.g()<235 && 75<colour2.b()<205 && abs(colour2.g()-colour2.r())>20 && abs(colour2.g()-colour2.b())>20) {
-        mtr.moveCounts(-50, -50, 50);
-        delay(200);
-        singleTrack(1, 1000);      //side, closeleft, closeright
-        LGreen = 1;
-      }
-      colour3.update();
-      if (70<colour3.r()<220 && 85<colour3.g()<230 && 75<colour3.b()<210 && abs(colour3.g()-colour3.r())>20 && abs(colour3.g()-colour3.b())>20) {
-        mtr.moveCounts(-50, -50, 50);
-        delay(200);
-        singleTrack(2, 1000);
-        RGreen = 1;
-      }
->>>>>>> origin/master
-      if (LGreen == 0 && RGreen == 0) {
-        mtr.moveCounts(60, 60, 23);
-        //md.setBrakes(400,400);
-      }
-      LGreen = 0;
-      RGreen = 0;
+		if (LGreen) {
+			
+			Serial.println("L");
+			
+			mtr.moveCounts(-50, -50, 50);
+			delay(100);
+			singleTrack(1, 1000);      //side, closeleft, closeright
+			
+		} else if (RGreen) {
+			
+			Serial.println("R");
+			
+			mtr.moveCounts(-50, -50, 50);
+			delay(100);
+			singleTrack(2, 1000);
+			
+		} else {
+		  mtr.moveCounts(60, 60, 23);
+		}
+		
+		LGreen = 0;
+		RGreen = 0;
+		
     }else{
       pid.track(far_left,close_left,close_right,far_right);
     }
   }else{
   md.setBrakes(400, 400);
   }
- 
 }
-
 
 void singleTrack(int side, long t){
   if(side == 1){
@@ -159,186 +145,160 @@ void singleTrack(int side, long t){
   }
 }
 
-float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.x;
-}
 
-float accelY(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.y;
-}
-
-float accelZ(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.z;
-}
-
-int slope(){                           //Function to detect uphill, downhill or flat
-if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
-  {
-  return 0;}
-  else
-  {
-    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
-    {return 1;}
-    else
-    {return -1;}
-  }
-}
-
-
-float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.x;
-}
-
-float accelY(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.y;
-}
-
-float accelZ(){
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  return event.acceleration.z;
-}
-
-int slope(){                           //Function to detect uphill, downhill or flat
-if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75)
-  {
-  return 0;}
-  else
-  {
-    if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90)
-    {return 1;}
-    else
-    {return -1;}
-  }
-}
-
-void Lcolour()    {colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-colour2.update();
-      Lr1 = colour2.r();
-      Lg1 = colour2.g();
-      Lb1 = colour2.b();
-      delay(100);
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-            colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-            colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      colour2.update();
-      Lr2 = colour2.r();
-      Lg2 = colour2.g();
-      Lb2 = colour2.b();
-      LrAvg = (Lr1+Lr2)/2;
-      LgAvg = (Lg1+Lg2)/2;
-      LbAvg = (Lb1+Lb2)/2;
-      if(70<LrAvg<210 && 90<LgAvg<235 && 75<LbAvg<205 && abs(LgAvg-LrAvg) >20 && abs(LgAvg-LbAvg) >20) {
-        Serial.println("L");
-        mtr.moveCounts(-50, -50, 50);
-        delay(100);
-        singleTrack(1, 1000);      //side, closeleft, closeright
-        LGreen = 1;
-      }
+void Lcolour(){
+	int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, LrAvg, LgAvg, LbAvg;
+	
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	
+	Lr1 = colour2.r();
+	Lg1 = colour2.g();
+	Lb1 = colour2.b();
+	
+	delay(100);
+	
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	colour2.update();
+	
+	Lr2 = colour2.r();
+	Lg2 = colour2.g();
+	Lb2 = colour2.b();
+	
+	LrAvg = (Lr1+Lr2)/2;
+	LgAvg = (Lg1+Lg2)/2;
+	LbAvg = (Lb1+Lb2)/2;
+	
+	if(70<LrAvg<210 && 90<LgAvg<235 && 75<LbAvg<205 && abs(LgAvg-LrAvg) >20 && abs(LgAvg-LbAvg) >20) {
+		LGreen = 1;
+	}
 }
 
 
 void Rcolour() { 
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-                colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-                colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-        colour3.update();
-      Rr1 = colour3.r();
-      Rg1 = colour3.g();
-      Rb1 = colour3.b();
-      delay(100);
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-            colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-            colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      colour3.update();
-      Rr2 = colour3.r();
-      Rg2 = colour3.g();
-      Rb2 = colour3.b();
-      RrAvg = (Rr1+Rr2)/2;
-      RgAvg = (Rg1+Rg2)/2;
-      RbAvg = (Rb1+Rb2)/2;
-      delay(100);
-      if (70<RrAvg<220 && 85<RgAvg<230 && 75<RbAvg<210 && abs(RgAvg-RrAvg)>20 && abs(RgAvg-RrAvg)>20) {
-        Serial.println("R");
-        mtr.moveCounts(-50, -50, 50);
-        delay(100);
-        singleTrack(2, 1000);
-        RGreen = 1;
-      }
+	
+	int Rr1, Rg1, Rb1, Rr2, Rg2, Rb2, RrAvg, RgAvg, RbAvg;
 
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	
+	Rr1 = colour3.r();
+	Rg1 = colour3.g();
+	Rb1 = colour3.b();
+	
+	delay(100);
+	
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	colour3.update();
+	
+	Rr2 = colour3.r();
+	Rg2 = colour3.g();
+	Rb2 = colour3.b();
+	
+	RrAvg = (Rr1+Rr2)/2;
+	RgAvg = (Rg1+Rg2)/2;
+	RbAvg = (Rb1+Rb2)/2;
+	
+	if (70<RrAvg<220 && 85<RgAvg<230 && 75<RbAvg<210 && abs(RgAvg-RrAvg)>20 && abs(RgAvg-RrAvg)>20) {
+		RGreen = 1;
+	}
+}
+
+float accelX(){                                 //Accelerometer readings on X, Y and Z axis.
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.x;
+}
+
+float accelY(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.y;
+}
+
+float accelZ(){
+  sensors_event_t event; 
+  accel.getEvent(&event);
+  return event.acceleration.z;
+}
+
+int slope(){                           //Function to detect uphill, downhill or flat
+	if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75){
+		return 0;
+	}else if(((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90){
+		return 1;
+	}else{
+		return -1;
+	}	
 }
