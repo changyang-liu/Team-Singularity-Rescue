@@ -3,45 +3,50 @@
 
 ColourSensor2::ColourSensor2() {};
 
-void ColourSensor2::update() {
-	_i = 0, _sum = 0;
-	
-	//SerialEvent
-	while (Serial2.available()) {   
-		_Re_buf[_counter] = (unsigned char)Serial2.read();
+int ColourSensor2::green() {
+	int result;
+	_end = false;
+	_first = true;
+	while (!_end) {
+		while (!Serial2.available()) {int useless = 0;}
+		int temp = Serial2.read();
+		if (temp == 3) {
+			if (_counter == 3 && !_first) {
+				_r = _readings[4];
+				_g = _readings[5];
+				_b = _readings[6];
+				
+				_persent = (((long)_g*10000)/(_r+_g+_b));
+
+				if (_persent > 3700) {
+					result = 1;
+				} else {
+					result = 0;
+				}
+				
+				_end = true;
+			} else {
+				_counter = 3;
+			}
+		}
 		
-		if(_counter == 0 && _Re_buf[0] != 0x5A) return;        
-		
-		_counter++;       
-		
-		if(_counter == 8) {    
-			_counter = 0;
-			_sign = 1;
-		}      
+		if (temp > 0 && temp < 256) {
+			if (_counter == 8) {
+				_counter = 0;
+				_first = false;
+			}
+			_readings[_counter] = temp;
+			++_counter;
+		}
 	}
 	
-	if(_sign) {   
-		_sign = 0;
-		for(_i = 0; _i<7; _i++)
-			_sum += _Re_buf[_i]; 
-		if(_sum == _Re_buf[_i] ) {  	           
-			_rgb[0] = _Re_buf[4];
-			_rgb[1] = _Re_buf[5];
-			_rgb[2] = _Re_buf[6];  
-		} 
-	} 
+	return result;
+	
 }
-
-byte ColourSensor2::r() {return _rgb[0];}
-
-byte ColourSensor2::g() {return _rgb[1];}
-
-byte ColourSensor2::b() {return _rgb[2];}
-
-
 
 ColourSensor3::ColourSensor3() {};
 
+<<<<<<< HEAD
 void ColourSensor3::update() {
 	_i = 0, _sum = 0;
 	
@@ -59,22 +64,45 @@ void ColourSensor3::update() {
 			_counter = 0;
 			_sign = 1;
 		}      
+=======
+int ColourSensor3::green() {
+	int result;
+	_end = false;
+	_first = true;
+	while (!_end) {
+		while (!Serial3.available()) {int useless = 0;}
+		int temp = Serial3.read();
+		if (temp == 3) {
+			if (_counter == 3 && !_first) {
+				_r = _readings[4];
+				_g = _readings[5];
+				_b = _readings[6];
+				
+				_persent = (((long)_g*10000)/(_r+_g+_b));
+
+				if (_persent > 3700) {
+					result = 1;
+				} else {
+					result = 0;
+				}
+				
+				_end = true;
+			} else {
+				_counter = 3;
+			}
+		}
+		
+		if (temp > 0 && temp < 256) {
+			if (_counter == 8) {
+				_counter = 0;
+				_first = false;
+			}
+			_readings[_counter] = temp;
+			++_counter;
+		}
+>>>>>>> origin/master
 	}
 	
-	if(_sign) {   
-		_sign = 0;
-		for(_i = 0; _i<7; _i++)
-			_sum += _Re_buf[_i]; 
-		if(_sum == _Re_buf[_i] ) {  	           
-			_rgb[0] = _Re_buf[4];
-			_rgb[1] = _Re_buf[5];
-			_rgb[2] = _Re_buf[6];  
-		} 
-	} 
+	return result;
+	
 }
-
-byte ColourSensor3::r() {return _rgb[0];}
-
-byte ColourSensor3::g() {return _rgb[1];}
-
-byte ColourSensor3::b() {return _rgb[2];}

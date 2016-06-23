@@ -7,36 +7,35 @@ class ColourSensor2 {
 	public:
 		ColourSensor2();
 	
-		void update();
-		
-		byte r();
-		byte g();
-		byte b();
+		int green();
 		
 	private:
-		unsigned char _i=0,_sum=0;
-	
-		unsigned char _Re_buf[11], _counter = 0;
-		unsigned char _sign = 0;
-		byte _rgb[3] = {0};
+		boolean _end = false;
+		boolean _first = true;
+		int _r,_g,_b;
+		int _readings[7] = {0};
+		int _counter = 0;
+		long _persent;
+		
+		
+
 };
 
 class ColourSensor3 {
 	public:
 		ColourSensor3();
-		
-		void update();
-		
-		byte r();
-		byte g();
-		byte b();
+	
+		int green();
 		
 	private:
-		unsigned char _i=0,_sum=0;
-	
-		unsigned char _Re_buf[11], _counter = 0;
-		unsigned char _sign = 0;
-		byte _rgb[3] = {0};
-};
+		boolean _end = false;
+		boolean _first = true;
+		int _r,_g,_b;
+		int _readings[7] = {0};
+		int _counter = 0;
+		long _persent;
+		
+		
 
+};
 #endif

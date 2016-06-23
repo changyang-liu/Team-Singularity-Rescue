@@ -157,6 +157,7 @@ void singleTrack(int side, long t){
 
 
 void Lcolour(){
+<<<<<<< HEAD
 	long Lr1 = 0, Lg1 = 0, Lb1 = 0, LrAvg = 0, LgAvg = 0, LbAvg = 0;
   
   for(int i = 0; i<50; i++){
@@ -173,6 +174,31 @@ void Lcolour(){
   LbAvg = Lb1/50;
 	
 	delay(100);
+=======
+	int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, LrAvg, LgAvg, LbAvg;
+  
+  for(int i = 0; i<20; i++){
+    colour2.update();
+  }
+  
+	Lr1 = colour2.r();
+	Lg1 = colour2.g();
+	Lb1 = colour2.b();
+	
+	delay(100);
+
+  for(int i = 0; i<20; i++){
+    colour2.update();
+  }
+	
+	Lr2 = colour2.r();
+	Lg2 = colour2.g();
+	Lb2 = colour2.b();
+	
+	LrAvg = (Lr1+Lr2)/2;
+	LgAvg = (Lg1+Lg2)/2;
+	LbAvg = (Lb1+Lb2)/2;
+>>>>>>> origin/master
 	
 	if(70<LrAvg<210 && 90<LgAvg<235 && 75<LbAvg<205 && abs(LgAvg-LrAvg) >20 && abs(LgAvg-LbAvg) >20) {
 		LGreen = 1;
@@ -182,6 +208,7 @@ void Lcolour(){
 
 void Rcolour() { 
 
+<<<<<<< HEAD
   long Rr1 = 0, Rg1 = 0, Rb1 = 0, RrAvg = 0, RgAvg = 0, RbAvg = 0;
   
   for(int i = 0; i<50; i++){
@@ -195,6 +222,29 @@ void Rcolour() {
   RrAvg = Rr1/50;
   RgAvg = Rg1/50;
   RbAvg = Rb1/50;
+=======
+  for(int i = 0; i<20; i++){
+    colour3.update();
+  }
+	
+	Rr1 = colour3.r();
+	Rg1 = colour3.g();
+	Rb1 = colour3.b();
+	
+	delay(100);
+	
+  for(int i = 0; i<20; i++){
+    colour3.update();
+  }
+	
+	Rr2 = colour3.r();
+	Rg2 = colour3.g();
+	Rb2 = colour3.b();
+	
+	RrAvg = (Rr1+Rr2)/2;
+	RgAvg = (Rg1+Rg2)/2;
+	RbAvg = (Rb1+Rb2)/2;
+>>>>>>> origin/master
 	
 	if (70<RrAvg<220 && 85<RgAvg<230 && 75<RbAvg<210 && abs(RgAvg-RrAvg)>20 && abs(RgAvg-RrAvg)>20) {
 		RGreen = 1;
