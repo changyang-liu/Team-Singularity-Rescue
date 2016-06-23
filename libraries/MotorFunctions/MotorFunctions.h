@@ -43,8 +43,8 @@ class Motors{
 		
 		int _encoder1PinA = 18;
 		int _encoder1PinB = 19;
-		int _encoder2PinA = 20;
-		int _encoder2PinB = 21;
+		int _encoder2PinA = 51;
+		int _encoder2PinB = 53;
 		
 		volatile boolean _PastA1 = 0, _PastA2 = 0, _PastB1 = 0, _PastB2 = 0;
 		
