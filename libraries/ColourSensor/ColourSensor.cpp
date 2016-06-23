@@ -49,10 +49,12 @@ void ColourSensor3::update() {
 	while (Serial3.available()) {   
 		_Re_buf[_counter] = (unsigned char)Serial3.read();
 		
-		if(_counter == 0 && _Re_buf[0] != 0x5A) return;        
-		
+		if(_counter == 0 && _Re_buf[0] != 0x5A ) return;        
+		{	
 		_counter++;       
+		}
 		
+	if(_Re_buf[0] != 0x5A && _Re_buf[1] != 0x5A && _Re_buf[2] != 0x45) {
 		if(_counter == 8) {    
 			_counter = 0;
 			_sign = 1;

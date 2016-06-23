@@ -1,3 +1,4 @@
+i#include <Servo.h>
 #include <EnableInterrupt.h>
 #include <IR.h>
 #include <Scaled.h>
@@ -14,14 +15,17 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
-PIDe_Array pid = PIDe_Array(md,1.8,0.4,1.5,70,0.035,30);
+PIDe_Array pid = PIDe_Array(md,1.8,0,1.8,70,0.04,30);
 PIDe_Single single = PIDe_Single(md,35, 3.5); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
 Motors mtr = Motors(md);
+Servo servo;
 
 int loops = 0;
 int maxloops = 200;
+float gradient;
+float gradSingle;
 
 int LGreen;
 int RGreen;
@@ -40,30 +44,21 @@ void setup() {
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
   !accel.begin();
   md.init();
-
+  servo.attach(9);
 }
 
 void loop(){
-//  light.print();   //test values
-// colour2.update();
-//  colour3.update();
-//  Serial.print(colour2.r());
-//  Serial.print("  ");
-//  Serial.print(colour2.g());
-//  Serial.print("  ");
-//  Serial.print(colour2.b());
-//  Serial.print("  S2  ");
-//  Serial.print(colour3.r());
-//  Serial.print("  ");
-//  Serial.print(colour3.g());
-//  Serial.print("  ");
-//  Serial.println(colour3.b());
-//  if(70<colour2.r()<210 && 90<colour2.g()<235 && 75<colour2.b()<205 && abs(colour2.g()-colour2.r()) >20 && abs(colour2.g()-colour2.b()) >20) { 
-//    Serial.println("LGreen");
-//  }
-//  if (70<colour3.r()<220 && 85<colour3.g()<230 && 75<colour3.b()<210 && abs(colour3.g()-colour3.r())>20 && abs(colour3.g()-colour3.b())>20) {
-//  Serial.println("RGreen");
-//  }
+//  servo.write(90);
+//  Serial.println(slope());
+ light.print();   //test values
+// light.printlog();
+//Lcolour();
+//Rcolour();
+//Serial.print(LGreen);
+//Serial.print("   ");
+//Serial.println(RGreen);
+//    LGreen = 0;
+//    RGreen = 0;
 
   if(!ini.button()){
     int far_left = light.scale1();
@@ -83,9 +78,15 @@ void loop(){
 //  }
 
     if(loops == maxloops){
-      if(slope() == 1){
+      //Serial.println(slope());
+      gradient = 0;
+      for(int i = 0; i < 10; i++){
+        gradient+=slope();
+      }
+      gradient = gradient/10;
+      if(gradient>=0.5){
         pid.setMaxSpeed(150);
-      }else if (slope() == -1){
+      }else if (gradient <= -0.4){
         pid.setMaxSpeed(10);
       }else{
         pid.setMaxSpeed(70);
@@ -95,30 +96,39 @@ void loop(){
     }
     ++loops;
   
-    if((far_left + close_left)/2 < 40 && (far_right + close_right)/2 < 40){
+    if((far_left + close_left*1.2)/2.2 < 50 && (far_right + close_right*1.2)/2.2 < 50 && abs(far_left - far_right) < 40 ){
 		md.setBrakes(400, 400);
 		Lcolour();
-		Rcolour();
 
-		if (LGreen) {
-			
-			Serial.println("L");
-			
-			mtr.moveCounts(-50, -50, 50);
-			delay(100);
-			singleTrack(1, 1000);      //side, closeleft, closeright
-			
-		} else if (RGreen) {
-			
-			Serial.println("R");
-			
-			mtr.moveCounts(-50, -50, 50);
-			delay(100);
-			singleTrack(2, 1000);
-			
-		} else {
-		  mtr.moveCounts(60, 60, 23);
-		}
+		Rcolour();
+    gradSingle = 0;
+    for(int i = 0; i < 10; i++){
+    gradSingle+=slope();
+    }
+    gradSingle = gradSingle/10;
+
+    if(gradSingle<=-0.4) {
+     single.setMaxSpeed(10);
+    }else {
+      single.setMaxSpeed(35);
+    }
+		
+   if (LGreen) {
+      Serial.println("L");
+      //mtr.moveCounts(-50, -50, 50);
+      //delay(100);
+      //singleTrack(1, 1000);
+    }else if (RGreen){
+      Serial.println("R");
+      //mtr.moveCounts(-50, -50, 50);
+      //delay(100);
+      //singleTrack(2,1000);
+    }
+       else {
+      Serial.println("No");
+      //mtr.moveCounts(50, 50, 10);
+       }
+		
 		
 		LGreen = 0;
 		RGreen = 0;
@@ -147,66 +157,22 @@ void singleTrack(int side, long t){
 
 
 void Lcolour(){
-	int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, LrAvg, LgAvg, LbAvg;
-	
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	
-	Lr1 = colour2.r();
-	Lg1 = colour2.g();
-	Lb1 = colour2.b();
+	long Lr1 = 0, Lg1 = 0, Lb1 = 0, LrAvg = 0, LgAvg = 0, LbAvg = 0;
+  
+  for(int i = 0; i<50; i++){
+  colour2.update();
+  delay(10);
+  
+	Lr1 += colour2.r();
+	Lg1 += colour2.g();
+	Lb1 += colour2.b();
+  }
+
+  LrAvg = Lr1/50;
+  LgAvg = Lg1/50;
+  LbAvg = Lb1/50;
 	
 	delay(100);
-	
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	colour2.update();
-	
-	Lr2 = colour2.r();
-	Lg2 = colour2.g();
-	Lb2 = colour2.b();
-	
-	LrAvg = (Lr1+Lr2)/2;
-	LgAvg = (Lg1+Lg2)/2;
-	LbAvg = (Lb1+Lb2)/2;
 	
 	if(70<LrAvg<210 && 90<LgAvg<235 && 75<LbAvg<205 && abs(LgAvg-LrAvg) >20 && abs(LgAvg-LbAvg) >20) {
 		LGreen = 1;
@@ -215,60 +181,20 @@ void Lcolour(){
 
 
 void Rcolour() { 
-	
-	int Rr1, Rg1, Rb1, Rr2, Rg2, Rb2, RrAvg, RgAvg, RbAvg;
 
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	
-	Rr1 = colour3.r();
-	Rg1 = colour3.g();
-	Rb1 = colour3.b();
-	
-	delay(100);
-	
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	colour3.update();
-	
-	Rr2 = colour3.r();
-	Rg2 = colour3.g();
-	Rb2 = colour3.b();
-	
-	RrAvg = (Rr1+Rr2)/2;
-	RgAvg = (Rg1+Rg2)/2;
-	RbAvg = (Rb1+Rb2)/2;
+  long Rr1 = 0, Rg1 = 0, Rb1 = 0, RrAvg = 0, RgAvg = 0, RbAvg = 0;
+  
+  for(int i = 0; i<50; i++){
+  colour3.update();
+  
+  Rr1 += colour3.r();
+  Rg1 += colour3.g();
+  Rb1 += colour3.b();
+  }
+
+  RrAvg = Rr1/50;
+  RgAvg = Rg1/50;
+  RbAvg = Rb1/50;
 	
 	if (70<RrAvg<220 && 85<RgAvg<230 && 75<RbAvg<210 && abs(RgAvg-RrAvg)>20 && abs(RgAvg-RrAvg)>20) {
 		RGreen = 1;
@@ -294,9 +220,9 @@ float accelZ(){
 }
 
 int slope(){                           //Function to detect uphill, downhill or flat
-	if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-75){
+	if (((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-100&&((atan2(accelZ(),accelY()) * 180) / 3.1415926)<-70){
 		return 0;
-	}else if(((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-90){
+	}else if(((atan2(accelZ(),accelY()) * 180) / 3.1415926)>-70){
 		return 1;
 	}else{
 		return -1;
