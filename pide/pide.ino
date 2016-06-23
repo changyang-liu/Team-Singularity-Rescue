@@ -42,15 +42,21 @@ void setup() {
   enableInterrupt(mtr.getEncoder2PinA(), doEncoderA2, RISING);
   enableInterrupt(mtr.getEncoder1PinB(), doEncoderB1, CHANGE);
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
-  !accel.begin();
+//  !accel.begin();
   md.init();
   servo.attach(9);
 }
 
 void loop(){
+Serial.print(mtr.encoder1Pos);
+Serial.print("   ");
+Serial.println(mtr.encoder2Pos);
+//Serial.print(colour2.green());
+//Serial.print("  ");
+//Serial.println(colour3.green());
 //  servo.write(90);
 //  Serial.println(slope());
- light.print();   //test values
+// light.print();   //test values
 // light.printlog();
 //Lcolour();
 //Rcolour();
@@ -59,6 +65,7 @@ void loop(){
 //Serial.println(RGreen);
 //    LGreen = 0;
 //    RGreen = 0;
+//Serial.println(ini.button());
 
   if(!ini.button()){
     int far_left = light.scale1();
@@ -77,24 +84,24 @@ void loop(){
 //    }
 //  }
 
-    if(loops == maxloops){
-      //Serial.println(slope());
-      gradient = 0;
-      for(int i = 0; i < 10; i++){
-        gradient+=slope();
-      }
-      gradient = gradient/10;
-      if(gradient>=0.5){
-        pid.setMaxSpeed(150);
-      }else if (gradient <= -0.4){
-        pid.setMaxSpeed(10);
-      }else{
-        pid.setMaxSpeed(70);
-      }
-      //Serial.println(gradient);
-      loops = 0;
-    }
-    ++loops;
+//    if(loops == maxloops){
+//      //Serial.println(slope());
+//      gradient = 0;
+//      for(int i = 0; i < 10; i++){
+//        gradient+=slope();
+//      }
+//      gradient = gradient/10;
+//      if(gradient>=0.5){
+//        pid.setMaxSpeed(150);
+//      }else if (gradient <= -0.4){
+//        pid.setMaxSpeed(10);
+//      }else{
+//        pid.setMaxSpeed(70);
+//      }
+//      //Serial.println(gradient);
+//      loops = 0;
+//    }
+//    ++loops;
   
     if((far_left + close_left*1.2)/2.2 < 50 && (far_right + close_right*1.2)/2.2 < 50 && abs(far_left - far_right) < 40 ){
 		md.setBrakes(400, 400);
@@ -111,19 +118,19 @@ void loop(){
     }
 		
    if (colour2.green()) {
-      Serial.println("L");
-      //mtr.moveCounts(-50, -50, 50);
-      //delay(100);
-      //singleTrack(1, 1000);
+//      Serial.println("L");
+      mtr.moveCounts(-50, -50, 50);
+      delay(100);
+      singleTrack(1, 1000);
     }else if (colour3.green()){
-      Serial.println("R");
-      //mtr.moveCounts(-50, -50, 50);
-      //delay(100);
-      //singleTrack(2,1000);
+//      Serial.println("R");
+      mtr.moveCounts(-50, -50, 50);
+      delay(100);
+      singleTrack(2,1000);
     }
        else {
-      Serial.println("No");
-      //mtr.moveCounts(50, 50, 10);
+//      Serial.println("No");
+      mtr.moveCounts(50, 50, 10);
        }
 		
 		
