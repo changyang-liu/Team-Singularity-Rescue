@@ -9,6 +9,7 @@ class PIDe_Array {
 		PIDe_Array(DualVNH5019MotorShield md, float kp, float ki, float kd_ratio, float maximum, float gradient, float half_x);
 		void track(float far_left, float close_left, float close_right, float far_right);
 		void debug();
+		void setMaxSpeed(int max_speed);
 		
 		const double e = 2.71828;
 		
