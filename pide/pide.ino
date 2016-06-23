@@ -1,4 +1,4 @@
-i#include <Servo.h>
+#include <Servo.h>
 #include <EnableInterrupt.h>
 #include <IR.h>
 #include <Scaled.h>
@@ -98,9 +98,6 @@ void loop(){
   
     if((far_left + close_left*1.2)/2.2 < 50 && (far_right + close_right*1.2)/2.2 < 50 && abs(far_left - far_right) < 40 ){
 		md.setBrakes(400, 400);
-		Lcolour();
-
-		Rcolour();
     gradSingle = 0;
     for(int i = 0; i < 10; i++){
     gradSingle+=slope();
@@ -113,12 +110,12 @@ void loop(){
       single.setMaxSpeed(35);
     }
 		
-   if (LGreen) {
+   if (colour2.green()) {
       Serial.println("L");
       //mtr.moveCounts(-50, -50, 50);
       //delay(100);
       //singleTrack(1, 1000);
-    }else if (RGreen){
+    }else if (colour3.green()){
       Serial.println("R");
       //mtr.moveCounts(-50, -50, 50);
       //delay(100);
@@ -129,9 +126,6 @@ void loop(){
       //mtr.moveCounts(50, 50, 10);
        }
 		
-		
-		LGreen = 0;
-		RGreen = 0;
 		
     }else{
       pid.track(far_left,close_left,close_right,far_right);
@@ -153,102 +147,6 @@ void singleTrack(int side, long t){
       single.track(2, light.scale2(), light.scale3()); 
     }
   }
-}
-
-
-void Lcolour(){
-<<<<<<< HEAD
-	long Lr1 = 0, Lg1 = 0, Lb1 = 0, LrAvg = 0, LgAvg = 0, LbAvg = 0;
-  
-  for(int i = 0; i<50; i++){
-  colour2.update();
-  delay(10);
-  
-	Lr1 += colour2.r();
-	Lg1 += colour2.g();
-	Lb1 += colour2.b();
-  }
-
-  LrAvg = Lr1/50;
-  LgAvg = Lg1/50;
-  LbAvg = Lb1/50;
-	
-	delay(100);
-=======
-	int Lr1, Lg1, Lb1, Lr2, Lg2, Lb2, LrAvg, LgAvg, LbAvg;
-  
-  for(int i = 0; i<20; i++){
-    colour2.update();
-  }
-  
-	Lr1 = colour2.r();
-	Lg1 = colour2.g();
-	Lb1 = colour2.b();
-	
-	delay(100);
-
-  for(int i = 0; i<20; i++){
-    colour2.update();
-  }
-	
-	Lr2 = colour2.r();
-	Lg2 = colour2.g();
-	Lb2 = colour2.b();
-	
-	LrAvg = (Lr1+Lr2)/2;
-	LgAvg = (Lg1+Lg2)/2;
-	LbAvg = (Lb1+Lb2)/2;
->>>>>>> origin/master
-	
-	if(70<LrAvg<210 && 90<LgAvg<235 && 75<LbAvg<205 && abs(LgAvg-LrAvg) >20 && abs(LgAvg-LbAvg) >20) {
-		LGreen = 1;
-	}
-}
-
-
-void Rcolour() { 
-
-<<<<<<< HEAD
-  long Rr1 = 0, Rg1 = 0, Rb1 = 0, RrAvg = 0, RgAvg = 0, RbAvg = 0;
-  
-  for(int i = 0; i<50; i++){
-  colour3.update();
-  
-  Rr1 += colour3.r();
-  Rg1 += colour3.g();
-  Rb1 += colour3.b();
-  }
-
-  RrAvg = Rr1/50;
-  RgAvg = Rg1/50;
-  RbAvg = Rb1/50;
-=======
-  for(int i = 0; i<20; i++){
-    colour3.update();
-  }
-	
-	Rr1 = colour3.r();
-	Rg1 = colour3.g();
-	Rb1 = colour3.b();
-	
-	delay(100);
-	
-  for(int i = 0; i<20; i++){
-    colour3.update();
-  }
-	
-	Rr2 = colour3.r();
-	Rg2 = colour3.g();
-	Rb2 = colour3.b();
-	
-	RrAvg = (Rr1+Rr2)/2;
-	RgAvg = (Rg1+Rg2)/2;
-	RbAvg = (Rb1+Rb2)/2;
->>>>>>> origin/master
-	
-	if (70<RrAvg<220 && 85<RgAvg<230 && 75<RbAvg<210 && abs(RgAvg-RrAvg)>20 && abs(RgAvg-RrAvg)>20) {
-		RGreen = 1;
-	}
 }
 
 float accelX(){                                 //Accelerometer readings on X, Y and Z axis.

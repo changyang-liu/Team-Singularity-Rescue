@@ -46,25 +46,6 @@ int ColourSensor2::green() {
 
 ColourSensor3::ColourSensor3() {};
 
-<<<<<<< HEAD
-void ColourSensor3::update() {
-	_i = 0, _sum = 0;
-	
-	//SerialEvent
-	while (Serial3.available()) {   
-		_Re_buf[_counter] = (unsigned char)Serial3.read();
-		
-		if(_counter == 0 && _Re_buf[0] != 0x5A ) return;        
-		{	
-		_counter++;       
-		}
-		
-	if(_Re_buf[0] != 0x5A && _Re_buf[1] != 0x5A && _Re_buf[2] != 0x45) {
-		if(_counter == 8) {    
-			_counter = 0;
-			_sign = 1;
-		}      
-=======
 int ColourSensor3::green() {
 	int result;
 	_end = false;
@@ -100,7 +81,6 @@ int ColourSensor3::green() {
 			_readings[_counter] = temp;
 			++_counter;
 		}
->>>>>>> origin/master
 	}
 	
 	return result;
