@@ -15,7 +15,7 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
-PIDe_Array pid = PIDe_Array(md,1.8,0,1.8,70,0.04,30);
+PIDe_Array pid = PIDe_Array(md,1.8,0.06,30,70,0.04,30);
 PIDe_Single single = PIDe_Single(md,35, 3.5); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
@@ -44,13 +44,13 @@ void setup() {
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
 //  !accel.begin();
   md.init();
-  servo.attach(9);
+  //servo.attach(9);
 }
 
 void loop(){
-Serial.print(mtr.encoder1Pos);
-Serial.print("   ");
-Serial.println(mtr.encoder2Pos);
+//Serial.print(mtr.encoder1Pos);
+//Serial.print("   ");
+//Serial.println(mtr.encoder2Pos);
 //Serial.print(colour2.green());
 //Serial.print("  ");
 //Serial.println(colour3.green());
@@ -63,9 +63,9 @@ Serial.println(mtr.encoder2Pos);
 //Serial.print(LGreen);
 //Serial.print("   ");
 //Serial.println(RGreen);
-//    LGreen = 0;
-//    RGreen = 0;
-//Serial.println(ini.button());
+    LGreen = 0;
+    RGreen = 0;
+  
 
   if(!ini.button()){
     int far_left = light.scale1();
@@ -103,26 +103,44 @@ Serial.println(mtr.encoder2Pos);
 //    }
 //    ++loops;
   
-    if((far_left + close_left*1.2)/2.2 < 50 && (far_right + close_right*1.2)/2.2 < 50 && abs(far_left - far_right) < 40 ){
+  if((far_left + close_left*1.2)/2.2 < 45 && (far_right + close_right*1.2)/2.2 < 45 && abs(far_left - far_right) < 30 ){
 		md.setBrakes(400, 400);
-    gradSingle = 0;
-    for(int i = 0; i < 10; i++){
-    gradSingle+=slope();
+//    gradSingle = 0;
+//    for(int i = 0; i < 10; i++){
+//    gradSingle+=slope();
+//    }
+//    gradSingle = gradSingle/10;
+//
+//    if(gradSingle<=-0.4) {
+//     single.setMaxSpeed(10);
+//    }else {
+//      single.setMaxSpeed(35);
+//    }
+  delay(200);
+  for(int i = 0; i < 5; i++){
+    md.setSpeeds(-30, -30);
+    if(colour2.green()){
+      LGreen = 1;
+    }else if(colour3.green()){
+      RGreen = 1;
     }
-    gradSingle = gradSingle/10;
-
-    if(gradSingle<=-0.4) {
-     single.setMaxSpeed(10);
-    }else {
-      single.setMaxSpeed(35);
+  }
+  delay(200);
+  for(int i = 0; i < 5; i++){
+    md.setSpeeds(30, 30);
+    if(colour2.green()){
+      LGreen = 1;
+    }else if(colour3.green()){
+      RGreen = 1;
     }
-		
-   if (colour2.green()) {
+  }
+   
+   if (LGreen == 1) {
 //      Serial.println("L");
       mtr.moveCounts(-50, -50, 50);
       delay(100);
       singleTrack(1, 1000);
-    }else if (colour3.green()){
+    }else if (RGreen == 1){
 //      Serial.println("R");
       mtr.moveCounts(-50, -50, 50);
       delay(100);
