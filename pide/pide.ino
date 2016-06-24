@@ -48,9 +48,9 @@ void setup() {
 }
 
 void loop(){
-Serial.print(mtr.encoder1Pos);
-Serial.print("   ");
-Serial.println(mtr.encoder2Pos);
+//Serial.print(mtr.encoder1Pos);
+//Serial.print("   ");
+//Serial.println(mtr.encoder2Pos);
 //Serial.print(colour2.green());
 //Serial.print("  ");
 //Serial.println(colour3.green());
@@ -58,14 +58,7 @@ Serial.println(mtr.encoder2Pos);
 //  Serial.println(slope());
 // light.print();   //test values
 // light.printlog();
-//Lcolour();
-//Rcolour();
-//Serial.print(LGreen);
-//Serial.print("   ");
-//Serial.println(RGreen);
-//    LGreen = 0;
-//    RGreen = 0;
-//Serial.println(ini.button());
+Serial.println(digitalRead(touchSensorPin);
 
   if(!ini.button()){
     int far_left = light.scale1();
