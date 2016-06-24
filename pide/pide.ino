@@ -58,7 +58,7 @@ void loop(){
 //  Serial.println(slope());
 // light.print();   //test values
 // light.printlog();
-Serial.println(digitalRead(touchSensorPin);
+Serial.println(digitalRead(ini.touchSensorPin));
 
   if(!ini.button()){
     int far_left = light.scale1();

@@ -10,7 +10,7 @@ void Initialization::initialize () {
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
   delay(1);
