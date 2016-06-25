@@ -8,11 +8,12 @@ class ColourSensor2 {
 		ColourSensor2();
 	
 		int green();
+		int _r,_g,_b;
 		
 	private:
 		boolean _end = false;
 		boolean _first = true;
-		int _r,_g,_b;
+
 		int _readings[7] = {0};
 		int _counter = 0;
 		long _persent;
@@ -26,11 +27,10 @@ class ColourSensor3 {
 		ColourSensor3();
 	
 		int green();
-		
+		int _r,_g,_b;		
 	private:
 		boolean _end = false;
 		boolean _first = true;
-		int _r,_g,_b;
 		int _readings[7] = {0};
 		int _counter = 0;
 		long _persent;

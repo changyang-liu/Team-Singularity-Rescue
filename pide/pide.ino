@@ -33,6 +33,12 @@ float close_left;
 float close_right;
 float far_right;
 
+long LLightTotal;
+long RLightTotal;
+long LLightAvg;
+long RLightAvg;
+int LDRsamples = 500;
+
 int counter = 0;
 
 int whiteCounter[100] = {0};
@@ -54,6 +60,8 @@ void setup() {
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
   md.init();
 //  md.setSpeeds(50, 50);
+pinMode(41, OUTPUT);
+digitalWrite(41, HIGH);
 }
 
 void loop(){  
@@ -63,9 +71,8 @@ void loop(){
 //Serial.print(colour2.green());
 //Serial.print("  ");
 //Serial.println(colour3.green());
-//  servo.write(90);
 // light.print();   
-// light.printlog();
+ light.printlog();
 //Serial.print(LGreen);
 //Serial.print("   ");
 //Serial.println(RGreen);
@@ -85,13 +92,20 @@ void loop(){
     far_right = light.scale4();
 
 
-//  if(far_left > 50 && close_left >50 && close_right >50 && far_right > 50) {++counts;}
-//  else {counts = 0;}
-//  if(counts > 50) {
-//    md.setBrakes(400, 400);
-//    delay(2000);
-//    //check for rescue zone using front and side IR
-//  }
+  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
+  else {counts = 0;}
+  if(counts > 500) {
+    md.setBrakes(400, 400);
+    delay(100);
+//    if(RLightAvg > 400)
+//    {
+//      if(colour2._r <  && colour2._g <  && colour2._b <  && colour3._r <  && colour3._g <  && colour3._b <  ) {
+//        mtr.moveCounts(-50,-50,200);
+//        //rescue zone
+//      }
+//    }
+    counts = 0;
+  }
     
   if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
     md.setBrakes(400, 400);
@@ -180,5 +194,15 @@ float slope() {
   else {return 0;}
   return slopeAvg;
   slopeAvg = 0;
+}
+
+void LRavg() {
+LLightTotal = 0;
+RLightTotal = 0;
+for (int i=1; i<=LDRsamples;++i)
+{LLightTotal+=analogRead(A6);
+ RLightTotal+=analogRead(A15);}
+LLightAvg = LLightTotal/LDRsamples;
+RLightAvg = RLightTotal/LDRsamples;
 }
 
