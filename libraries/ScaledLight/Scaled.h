@@ -7,10 +7,10 @@ class Scaled
 {
   public:
         Scaled ();	  
-	int scale1();
-	int scale2();
-	int scale3 ();
-	int scale4 ();
+	float scale1();
+	float scale2();
+	float scale3 ();
+	float scale4 ();
 	void print ();
 	void printlog();
   
@@ -24,11 +24,6 @@ class Scaled
 	float max3 = 6.30, min3 = 5.35;
 	float max4 = 6.35, min4 = 5.55;
 
-        // float range1 = 330 - 50;
-        // float range2 = 816 - 120;
-        // float range3 = 513 - 80;
-        // float range4 = 870 - 160;
-
 	
 	float range1 = max1 - min1;
 	float range2 = max2 - min2;
@@ -36,10 +31,10 @@ class Scaled
 	float range4 = max4 - min4;
 
 
-        int scaled1;
-        int scaled2;
-        int scaled3;
-        int scaled4;
+        float scaled1;
+        float scaled2;
+        float scaled3;
+        float scaled4;
 
         float raw1;
         float raw2;
