@@ -9,26 +9,8 @@ void Initialization::initialize () {
   pinMode(buttonPin,INPUT_PULLUP);
   pinMode(touchSensorPin, INPUT_PULLUP);
   pinMode(foilPin, INPUT);
-  pinMode(redPin, OUTPUT);
-  
-  
-  pinMode(encoder1PinA, INPUT); //turn on pullup resistor
-  digitalWrite(encoder1PinA, HIGH); //ONLY FOR SOME ENCODER(MAGNETIC)!!!! 
-  pinMode(encoder2PinA, INPUT);
-  digitalWrite(encoder2PinA, HIGH); 
-  pinMode(encoder1PinB, INPUT);
-  digitalWrite(encoder1PinB, HIGH);
-  pinMode(encoder2PinB, INPUT);
-  digitalWrite(encoder2PinB, HIGH);
-  
-  PastA1 = (boolean)digitalRead(encoder1PinA); //initial value of channel A;
-  PastA2 = (boolean)digitalRead(encoder2PinA); //initial value of channel A;
-  PastB1 = (boolean)digitalRead(encoder1PinB); //and channel B
-  PastB2 = (boolean)digitalRead(encoder2PinB); //and channel B
 
-//To Speed up even more, you may define manually the ISRs
-   
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
   delay(1);

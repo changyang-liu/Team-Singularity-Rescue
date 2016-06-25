@@ -13,14 +13,10 @@ class Initialization {
 		void initialize();
 		int button();
 		
-
-		int encoder1PinA = 18;
-		int encoder1PinB = 19;
-		int encoder2PinA = 51;
-		int encoder2PinB = 53;
 		
 		volatile long encoder1Pos = 0, encoder2Pos = 0;
 		volatile boolean PastA1 = 0, PastA2 = 0, PastB1 = 0, PastB2 = 0;
+		int buttonPin = 33,  touchSensorPin = 35, foilPin = 27;
 
 };
 
