@@ -27,6 +27,8 @@ int maxloops = 200;
 float gradient;
 float gradSingle;
 
+int counter = 0;
+
 int LGreen;
 int RGreen;
 
@@ -48,6 +50,14 @@ void setup() {
 }
 
 void loop(){
+  Serial.print(analogRead(A11));
+  Serial.print(" ");
+  Serial.print(analogRead(A12));
+  Serial.print(" ");
+  Serial.print(analogRead(A13));
+  Serial.print(" ");
+  Serial.println(analogRead(A14));
+  
 //Serial.print(mtr.encoder1Pos);
 //Serial.print("   ");
 //Serial.println(mtr.encoder2Pos);
@@ -72,6 +82,14 @@ void loop(){
     int close_left = light.scale2();
     int close_right = light.scale3();
     int far_right = light.scale4();
+    if(counter==1){
+      colour2.green();
+      colour3.green();
+      Serial.println(colour2.green());
+      }else if(counter==100){
+        counter=0;
+      }
+    counter++;
     
 //  if(digitalRead(ini.touchSensorPin) == 0) {      //obstacle code
 //    md.setBrakes(400, 400);
