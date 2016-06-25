@@ -27,6 +27,11 @@ int maxloops = 200;
 float gradient;
 float gradSingle;
 
+float far_left;
+float close_left;
+float close_right;
+float far_right;
+
 int counter = 0;
 
 int LGreen;
@@ -78,10 +83,10 @@ void loop(){
   
 
   if(!ini.button()){
-    int far_left = light.scale1();
-    int close_left = light.scale2();
-    int close_right = light.scale3();
-    int far_right = light.scale4();
+    far_left = light.scale1();
+    close_left = light.scale2();
+    close_right = light.scale3();
+    far_right = light.scale4();
     if(counter==1){
       colour2.green();
       colour3.green();
@@ -91,16 +96,21 @@ void loop(){
       }
     counter++;
     
-//  if(digitalRead(ini.touchSensorPin) == 0) {      //obstacle code
-//    md.setBrakes(400, 400);
-//    delay(200);
-//    mtr.moveCounts(-60, -60, 260);
-//    mtr.moveCounts(-50, 50, 320);
-//    mtr.moveCounts(60, 60, 250);
-//    while((far_left+close_left)/2 > 50) {
-//      md.setSpeeds(70, 40);
-//    }
-//  }
+  if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
+    md.setBrakes(400, 400);
+    delay(200);
+    mtr.moveCounts(-60, -60, 240);
+    mtr.moveCounts(-50, 50, 300);
+    mtr.moveCounts(60, 60, 250);
+    while(close_right > 50) {
+      md.setSpeeds(70, 30);
+      close_right = light.scale3();
+    }
+    mtr.moveTime(-50, 30, 450);
+    mtr.moveCounts(40, 40, 150);
+    mtr.moveTime(-50, 30, 1250);
+    
+  }
 
 //    if(loops == maxloops){
 //      //Serial.println(slope());
