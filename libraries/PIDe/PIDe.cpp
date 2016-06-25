@@ -20,8 +20,8 @@ void PIDe_Array::track(float far_left, float close_left, float close_right, floa
 	_close_right = close_right;
 	_far_right = far_right;
 
-	_left_ave = (_far_left + _close_left*1.5)/2.5;
-	_right_ave = (_far_right + _close_right*1.5)/2.5;
+	_left_ave = (_far_left + _close_left*1.3)/2.3;
+	_right_ave = (_far_right + _close_right*1.3)/2.3;
 	
 	_error = _left_ave - _right_ave;
 	_integral = _integral*_integral_factor + _error;
@@ -36,7 +36,7 @@ void PIDe_Array::track(float far_left, float close_left, float close_right, floa
 	// }
 	
 	_variable_speed = _maximum/(1+pow(e,_gradient*(abs(_error)-_half_x)));
-	_turn = _kp*_error+ _ki*_integral + _kd_ratio*_derivative;
+	_turn = _kp*_error+ _ki*_integral +_variable_speed*_kd_ratio*_derivative;
 	
 	_prev_error = _error;
 	
@@ -70,17 +70,17 @@ void PIDe_Single::track(int side, int close_left, int close_right) {
 	_close_right = close_right;
 	
 	if (side == 1) {
-		_error = _close_left-50;
+		_error = _close_left-65;
 		_turn = _error*_p;
 		
-		_speed1 = _base + _turn;
-		_speed2 = _base - _turn;
+		_speed1 = (_base + _turn)*0.6;
+		_speed2 = (_base - _turn);
 	} else if (side == 2) {
-		_error = close_right-50;
+		_error = close_right-65;
 		_turn = _error*_p;
 		
-		_speed1 = _base - _turn;
-		_speed2 = _base + _turn;
+		_speed1 = (_base - _turn);
+		_speed2 = (_base + _turn)*0.6;
 	}
 	
 	_md.setSpeeds(_speed1,_speed2);

@@ -18,7 +18,7 @@ int ColourSensor2::green() {
 				
 				_persent = (((long)_g*10000)/(_r+_g+_b));
 
-				if (_persent > 3700) {
+				if (_persent > 3800 && abs(_g - _r) >20 && abs(_g - _b) >20) {
 					result = 1;
 				} else {
 					result = 0;
@@ -61,7 +61,7 @@ int ColourSensor3::green() {
 				
 				_persent = (((long)_g*10000)/(_r+_g+_b));
 
-				if (_persent > 3700) {
+				if (_persent > 3800 && abs(_g - _r) >20 && abs(_g - _b) >20) {
 					result = 1;
 				} else {
 					result = 0;
