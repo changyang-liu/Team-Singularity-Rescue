@@ -46,6 +46,9 @@ bool ballAtRight = 0;
 bool ballAtFront = 9;
 int endCorner;
 
+int leftBlack = 280;
+int rightBlack= 170; 
+
 void setup() {
   ini.initialize();
   enableInterrupt(mtr.getEncoder1PinA(), doEncoderA1, RISING);
@@ -77,12 +80,13 @@ float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, av
 
 void loop()
 {
-   LRavg();
-  Serial.print(LLightAvg);
-  Serial.print("   ");
-  Serial.println(RLightAvg);
+//  myservo.write(0);
+//   LRavg();
+//  Serial.print(LLightAvg);
+//  Serial.print("   ");
+//  Serial.println(RLightAvg);
 //  printIR();
-//  servoPos(120);
+//  servoPos(140);
 //  delay(500);
 //  servoPos(0);
 //  delay(500);
@@ -96,46 +100,47 @@ void loop()
 //  }
   if (ini.button() == 0 && done == false && prevState == 1) {
     checkEnd();
-//    entrance();
-//    mtr.encoder1Pos = 0;
-//    while(ini.button() == 0){
-//      ballAtLeft = 0;
-//      ballAtRight = 0;
-//      ballAtFront = 0;
-//      myservo.write(120);
-//      md.setSpeeds(50, 54);
-//      scanLeft();
-//      scanRight();     
-//      if(ballAtLeft == 1 || ballAtRight == 1){
-//        break;
-//      }
-//      if(irFront.distance() < 15){
-//        ballAtFront = 1;
-//        break;
-//      }
-//    }
-//    distTrav+=mtr.encoder1Pos;
-//    Serial.println(distTrav);
-//    //Serial.println(distTrav);
-//    if(ballAtLeft == 1 && distTrav > 850){
-//      md.setBrakes(400, 400);
-//      delay(500);
-//      //ballCollectLeft();
-//    }else if(ballAtRight == 1){
-//      md.setBrakes(400, 400);
-//      delay(500);
-//      //ballCollectRight();
-//    }else if(ballAtFront == 1 && distTrav < 2300){
-//      md.setBrakes(400, 400);
-//      delay(500);
-//      servoPos(0);
-//      servoPos(120);
-//    }else if(distTrav > 2500 && endCorner != 1){
-//      checkEnd();
-//      sweep();
-      //check end zones, then sweep
-      
-//    }
+    entrance();
+    mtr.encoder1Pos = 0;
+    while(ini.button() == 0){
+      ballAtLeft = 0;
+      ballAtRight = 0;
+      ballAtFront = 0;
+      myservo.write(140);
+      md.setSpeeds(50, 54);
+      scanLeft();
+      scanRight();     
+      if(ballAtLeft == 1 || ballAtRight == 1){
+        break;
+      }
+      if(irFront.distance() < 15){
+        ballAtFront = 1;
+        break;
+      }
+    }
+    distTrav+=mtr.encoder1Pos;
+    Serial.println(distTrav);
+    //Serial.println(distTrav);
+    if(ballAtLeft == 1 && distTrav > 850){
+      md.setBrakes(400, 400);
+      delay(500);
+      //ballCollectLeft();
+    }else if(ballAtRight == 1){
+      md.setBrakes(400, 400);
+      delay(500);
+      //ballCollectRight();
+    }else if(ballAtFront == 1 && distTrav < 2300){
+      md.setBrakes(400, 400);
+      delay(500);
+      servoPos(0);
+      servoPos(140);
+    }else if(distTrav > 2500 && endCorner != 1){       //check end zones, then sweep
+      checkEnd();
+      sweep();
+    }else if(distTrav > 3000 && irFront.distance() < 10 && endCorner == 1){
+      checkEnd();
+      sweep();
+    }
        
     //done = true;
   }
@@ -156,7 +161,7 @@ void entrance() {
   md.setBrakes(400, 400);
   delay(100);
   LRavg();
-  if (RLightAvg <=370) {
+  if (RLightAvg <=rightBlack) {
     endCorner = 1;
     mtr.moveCounts(-50, -50, 280);
     mtr.moveCounts(50, -50, 430);
@@ -232,7 +237,7 @@ void ballCollectLeft() {
   mtr.moveTime(100, 105, 2000);
   mtr.moveCounts(-50, -50, 100);
   delay(200);
-  servoPos(120);
+  servoPos(140);
   delay(200);
   mtr.moveTime(60, 60, 2000);
   mtr.moveCounts(-50, -50, 1150);
@@ -246,7 +251,7 @@ void ballCollectRight() {
   mtr.moveTime(100, 105, 2000);
   mtr.moveCounts(-50, -50, 100);
   delay(200);
-  servoPos(120);
+  servoPos(140);
   delay(200);
   mtr.moveTime(60, 60, 2000);
   mtr.moveCounts(-50, -50, 1150);
@@ -278,11 +283,12 @@ void checkEnd(){
     mtr.moveCounts(-50, -50 ,200);
     mtr.moveCounts(-50, 50, 450);
     mtr.encoder1Pos = 0;
-    while(mtr.encoder1Pos < 200 || RLightAvg < 370){
+    while(mtr.encoder1Pos < 200 || RLightAvg < rightBlack){
       LRavg();
-      md.setSpeeds(40, 44);
+      md.setSpeeds(30, 33);
     }
-    if(RLightAvg < 370){
+    md.setBrakes(400, 400);
+    if(RLightAvg < rightBlack){
       endCorner = 3;
     }else{
       endCorner = 2;
@@ -295,9 +301,11 @@ void checkEnd(){
 void sweep(){
   switch (endCorner){
     case 1:
-      servoPos(0);
+      mtr.moveTime(80, 85, 2000);
+      mtr.moveCounts(-50, -50 ,200);
       break;
     case 2:
+      
       break;
     case 3:
       break;
@@ -310,7 +318,7 @@ void servoPos(int newPos){
   if(currentPos < newPos){
     for (int pos = currentPos; pos < newPos; pos++) { 
       myservo.write(pos);              // tell servo to go to position in variable 'pos'
-      delay(20);
+      delay(30);
     }   
   }else{
     for (int pos = currentPos; pos > newPos; pos--) { // goes from 180 degrees to 0 degrees
