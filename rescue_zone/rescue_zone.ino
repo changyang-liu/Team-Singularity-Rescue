@@ -45,9 +45,10 @@ bool ballAtLeft = 0;
 bool ballAtRight = 0;
 bool ballAtFront = 9;
 int endCorner;
+bool entered = 0;
 
-int leftBlack = 280;
-int rightBlack= 180; 
+int leftBlack = 300;
+int rightBlack= 200; 
 
 void setup() {
   ini.initialize();
@@ -80,8 +81,7 @@ float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, av
 
 void loop()
 {
- //sweepEndLeft();
-// myservo.write(0);
+ //myservo.write(180);
 //
 //   LRavg();
 //  Serial.print(LLightAvg);
@@ -92,23 +92,27 @@ void loop()
 //  delay(500);
 //  servoPos(0);
 //  delay(500);
-  LRavg();
-  Serial.print(LLightAvg);
-  Serial.print("   ");
-  Serial.println(RLightAvg);
+//  LRavg();
+//  Serial.print(LLightAvg);
+//  Serial.print("   ");
+//  Serial.println(RLightAvg);
   mtr.stopIfFault();
 //  while(ini.button() == 0){
-//    md.setSpeeds(40, 45);
+//    md.setSpeeds(38, 45);
 //  }
   if (ini.button() == 0 && done == false && prevState == 1) {
-    entrance();
+    if(entered == 0){
+      Serial.println("entrance");
+      entrance();
+      entered = 1;
+    }
     mtr.encoder1Pos = 0;
     while(ini.button() == 0){
       ballAtLeft = 0;
       ballAtRight = 0;
       ballAtFront = 0;
       myservo.write(140);
-      md.setSpeeds(50, 54);
+      md.setSpeeds(40, 44);
       scanLeft();
       scanRight();     
       if(ballAtLeft == 1 || ballAtRight == 1){
@@ -119,28 +123,33 @@ void loop()
         break;
       }
     }
-    distTrav+=mtr.encoder1Pos;
+    distTrav+=abs(mtr.encoder1Pos);
     Serial.println(distTrav);
-    if(ballAtLeft == 1 && distTrav > 750){
-      md.setBrakes(400, 400);
-      delay(500);
-      ballCollectLeft();
-    }else if(ballAtRight == 1){
-      md.setBrakes(400, 400);
-      delay(500);
-      ballCollectRight();
-    }else if(ballAtFront == 1 && distTrav < 2300){
-      md.setBrakes(400, 400);
-      delay(500);
-      servoPos(0);
-      servoPos(140);
-    }else if(distTrav > 2500 && endCorner != 1){       //check end zones, then sweep(if end zone is not opposite entrance)
+    if(distTrav > 2500 && endCorner != 1){       //check end zones, then sweep(if end zone is not opposite entrance)
+      Serial.println("end");
       checkEnd();                                      
-      sweepEndLeft();                                           //check sweep cases
+      sweepEndLeft();
     }else if(distTrav > 3000 && irFront.distance() < 10 && endCorner == 1){ //sweep both sides
 //      checkEnd();
 //      sweep();
-    }   
+    }else if(ballAtFront == 1 && distTrav < 2300){
+      Serial.println("ball at front");
+      md.setBrakes(400, 400);
+      delay(500);
+      servoPos(0);
+      delay(500);
+      servoPos(140);    
+    }else if(ballAtLeft == 1 && distTrav > 800 && distTrav < 2500){
+      Serial.println("ball at left");
+      md.setBrakes(400, 400);
+      delay(500);
+      ballCollectLeft();
+    }else if(ballAtRight == 1 && distTrav < 2500){
+      Serial.println("ball at right");
+      md.setBrakes(400, 400);
+      delay(500);
+      ballCollectRight();                                         //check sweep cases
+    }
     //done = true;
   }
   else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
@@ -153,11 +162,11 @@ void entrance() {
   mtr.encoder1Pos = 0;
   mtr.encoder2Pos = 0;
   while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveTime(60, 60, 300);
+  mtr.moveTime(60, 65, 300);
   LRavg();
   while (abs(mtr.encoder1Pos) < 1650 && RLightAvg > rightBlack  && ini.button() == 0) {
     LRavg();
-    md.setSpeeds(60, 60);
+    md.setSpeeds(60, 65);
   }
   md.setBrakes(400, 400);
   delay(100);
@@ -200,7 +209,7 @@ void scanLeft() {
     if (maxDistLeft - irLeft.distance() > 10) {
       ballAtLeft = 1;
     }
-  } else if (maxDistLeft - irLeft.distance() > 15) {
+  } else if (maxDistLeft - irLeft.distance() > 10) {
       ballAtLeft = 1;
   }
   sumdxLeft = 0;
@@ -222,7 +231,7 @@ void scanRight() {
     if (maxDistRight - irRight.distance() > 10) {
       ballAtRight = 1;
     }
-  }else if (maxDistRight - irRight.distance() > 15) {
+  }else if (maxDistRight - irRight.distance() > 10) {
     ballAtRight = 1;
   }
   //Serial.println(avedx);
@@ -241,6 +250,7 @@ void scanRight() {
 
 
 void ballCollectLeft() {
+  Serial.println("start ballCollectLeft");
   mtr.moveCounts(-50, -50 , 200);
   mtr.moveCounts(-50, 50, 510);
   servoPos(0);
@@ -251,10 +261,12 @@ void ballCollectLeft() {
   delay(200);
   mtr.moveTime(60, 60, 2000);
   mtr.moveCounts(-50, -50, 1150);
-  mtr.moveCounts(50, -50, 470);
+  mtr.moveCounts(40, -40, 468);
+  Serial.println("end ballCollectLeft");
 }
 
 void ballCollectRight() {
+  Serial.println("start ballCollectRight");
   mtr.moveCounts(-50, -50 , 200);
   mtr.moveCounts(50, -50, 450);
   servoPos(0);
@@ -264,8 +276,9 @@ void ballCollectRight() {
   servoPos(140);
   delay(200);
   mtr.moveTime(60, 60, 2000);
-  mtr.moveCounts(-50, -50, 1150);
-  mtr.moveCounts(-50, 50, 550);
+  mtr.moveCounts(-50, -55, 1150);
+  mtr.moveCounts(-40, 40, 530);
+  Serial.println("end ballCollectRight");
 }
 
 void printIR() {
@@ -294,23 +307,20 @@ void checkEnd(){
     mtr.moveCounts(-50, 50, 480);
     mtr.encoder1Pos = 0;
     LRavg();
-    while(mtr.encoder1Pos < 400 && RLightAvg > rightBlack){
+    while(mtr.encoder1Pos < 550 && RLightAvg > rightBlack){
       LRavg();
       Serial.println(RLightAvg);
       md.setSpeeds(40, 44);
     }
-    while(ini.button() == 0){
-      LRavg();
-      md.setBrakes(400, 400);
-      if(RLightAvg < rightBlack){
-        endCorner = 3;
-      }else{
-        endCorner = 2;
-      }
-      Serial.print(endCorner);
-      Serial.print(" ");
-      Serial.println(RLightAvg);
+    md.setBrakes(400, 400);
+    if(RLightAvg < rightBlack){
+      endCorner = 3;
+    }else{
+      endCorner = 2;
     }
+    Serial.print(endCorner);
+    Serial.print(" ");
+    Serial.println(RLightAvg);
   }
 }
 
