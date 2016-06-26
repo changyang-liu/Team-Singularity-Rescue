@@ -80,13 +80,12 @@ void loop(){
     LGreen = 0;
     RGreen = 0;
 //  Serial.println(slope());
-
 //  if(slope() == 1) {md.setSpeeds(80,80);}
 //  else if(slope() == -1) {md.setSpeeds(25,25);}
 //  else{md.setSpeeds(50,50);}
-
- 
-
+//Serial.print(irFront.distance());
+//Serial.print("   ");
+//Serial.println(irRight.distance());
 
   if(!ini.button()){
     far_left = light.scale1();
@@ -99,9 +98,8 @@ void loop(){
   else {counts = 0;}
   while(counts > 500) {
     md.setBrakes(400, 400);
-    if(irFront.distance() >60 && irFront.distance() < 70 && irRight.distance() >6 && irRight,distance() < 10) {
-      //rescue zone
-      
+    if(irFront.distance() >47 && irFront.distance() < 54 && irRight.distance() >9 && irRight.distance() < 14) {
+      //rescue zone 
     }
     counts = 0;
   }
