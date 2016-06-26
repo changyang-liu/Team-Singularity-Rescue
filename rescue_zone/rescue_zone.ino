@@ -82,7 +82,8 @@ float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, av
 void loop()
 {
  //myservo.write(180);
-//
+  checkEnd();
+  delay(500000000);
 //   LRavg();
 //  Serial.print(LLightAvg);
 //  Serial.print("   ");
@@ -304,7 +305,7 @@ void checkEnd(){
   if(endCorner != 1){
     mtr.moveTime(80, 85, 2000);
     mtr.moveCounts(-50, -50 ,200);
-    mtr.moveCounts(-50, 50, 480);
+    mtr.moveCounts(-50, 50, 500);
     mtr.encoder1Pos = 0;
     LRavg();
     while(mtr.encoder1Pos < 550 && RLightAvg > rightBlack){
