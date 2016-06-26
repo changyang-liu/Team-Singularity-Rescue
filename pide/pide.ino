@@ -1,6 +1,5 @@
 #include <Servo.h>
 #include <EnableInterrupt.h>
-#include <IR.h>
 #include <Scaled.h>
 #include <DualVNH5019MotorShield.h> 
 #include <Wire.h>
@@ -10,6 +9,7 @@
 #include <PIDe.h>
 #include <ColourSensor.h>
 #include <MotorFunctions.h>
+#include <IR.h>
 
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
@@ -19,8 +19,8 @@ PIDe_Array pid = PIDe_Array(md,1.5,0.6,1.8,70,0.08,30);
 PIDe_Single single = PIDe_Single(md,35, 3); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
-Motors mtr = Motors(md, myservo);
 Servo myservo;
+Motors mtr = Motors(md, myservo);
 SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 
@@ -46,6 +46,7 @@ int LDRsamples = 500;
 
 int counter = 0;
 
+int counts;
 
 int LGreen;
 int RGreen;
@@ -96,9 +97,9 @@ void loop(){
 
   if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
   else {counts = 0;}
-  if(counts > 500) {
-//    md.setBrakes(400, 400);
-    if(60<irFront.distance()<70 && 7<irRight,distance()<10) {
+  while(counts > 500) {
+    md.setBrakes(400, 400);
+    if(irFront.distance() >60 && irFront.distance() < 70 && irRight.distance() >6 && irRight,distance() < 10) {
       //rescue zone
       
     }

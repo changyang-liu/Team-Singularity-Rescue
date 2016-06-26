@@ -14,7 +14,7 @@ class ColourSensor2 {
 		boolean _end = false;
 		boolean _first = true;
 
-		int _readings[7] = {0};
+		int _readings[8] = {0};
 		int _counter = 0;
 		long _persent;
 		
@@ -31,7 +31,7 @@ class ColourSensor3 {
 	private:
 		boolean _end = false;
 		boolean _first = true;
-		int _readings[7] = {0};
+		int _readings[8] = {0};
 		int _counter = 0;
 		long _persent;
 		
