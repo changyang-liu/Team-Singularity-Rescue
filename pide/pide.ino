@@ -19,8 +19,10 @@ PIDe_Array pid = PIDe_Array(md,1.5,0.6,1.8,70,0.08,30);
 PIDe_Single single = PIDe_Single(md,35, 3); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
-Motors mtr = Motors(md);
-Servo servo;
+Motors mtr = Motors(md, myservo);
+Servo myservo;
+SharpIR irFront = SharpIR(A8);
+SharpIR irRight = SharpIR(A9);
 
 float slopeAvg;
 int loops = 0;
@@ -92,20 +94,17 @@ void loop(){
     far_right = light.scale4();
 
 
-//  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
-//  else {counts = 0;}
-//  if(counts > 500) {
+  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
+  else {counts = 0;}
+  if(counts > 500) {
 //    md.setBrakes(400, 400);
-//    delay(100);
-////    if(RLightAvg > 400)
-////    {
-////      if(colour2._r <  && colour2._g <  && colour2._b <  && colour3._r <  && colour3._g <  && colour3._b <  ) {
-////        mtr.moveCounts(-50,-50,200);
-////        //rescue zone
-////      }
-////    }
-//    counts = 0;
-//  }
+    if(60<irFront.distance()<70 && 7<irRight,distance()<10) {
+      //rescue zone
+      
+    }
+    counts = 0;
+  }
+  
     
   if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
     md.setBrakes(400, 400);
@@ -126,7 +125,7 @@ void loop(){
   if((far_left + close_left)/2 < 50 && (far_right + close_right)/2 < 50 && abs(far_left - far_right) < 40 && (far_left < 50 || far_right <50) ){
 		md.setBrakes(400, 400);
   delay(200);
-  for(int i = 0; i < 5; i++){
+  for(int i = 0; i < 7; i++){
     md.setSpeeds(-30, -30);
     if(colour2.green()){
       LGreen = 1;
@@ -135,7 +134,7 @@ void loop(){
     }
   }
   delay(200);
-  for(int i = 0; i < 5; i++){
+  for(int i = 0; i < 7; i++){
     md.setSpeeds(30, 30);
     if(colour2.green()){
       LGreen = 1;
