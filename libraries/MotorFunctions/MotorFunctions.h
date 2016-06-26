@@ -3,10 +3,11 @@
 
 #include <DualVNH5019MotorShield.h>
 #include <Arduino.h>
+#include <Servo.h>
 
 class Motors{
 	public:
-		Motors(DualVNH5019MotorShield md); 
+		Motors(DualVNH5019MotorShield md, Servo myservo); 
 		
 		void stopIfFault();
 		
@@ -49,6 +50,8 @@ class Motors{
 		volatile boolean _PastA1 = 0, _PastA2 = 0, _PastB1 = 0, _PastB2 = 0;
 		
 		DualVNH5019MotorShield _md;
+		Servo _myservo;
+		int _servoPos;
 		int _motor1Speed, _motor2Speed;
 		long _counts;
 		

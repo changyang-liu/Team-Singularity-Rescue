@@ -1,8 +1,10 @@
 #include <DualVNH5019MotorShield.h>
 #include <MotorFunctions.h>
+#include <Servo.h>
 
-Motors::Motors(DualVNH5019MotorShield md) {
+Motors::Motors(DualVNH5019MotorShield md, Servo myservo) {
 	_md = md;
+  _myservo = myservo;
 	
 	pinMode(_encoder1PinA, INPUT);
 	digitalWrite(_encoder1PinA, HIGH);
@@ -23,16 +25,19 @@ void Motors::moveCounts(int motor1Speed, int motor2Speed, long counts){
 	_motor1Speed = motor1Speed;
 	_motor2Speed = motor2Speed;
 	_counts = counts;
+  _servoPos = _myservo.read();
 	
 	encoder1Pos = 0;
 	encoder2Pos = 0;
 	
 	if (_motor1Speed == 0) {
 		while(abs(encoder2Pos) < _counts) {
+      _myservo.write(_servoPos);
 			_md.setSpeeds(_motor1Speed, _motor2Speed);
 		}
 	} else {
 		while(abs(encoder1Pos) < _counts) {
+      _myservo.write(_servoPos);
 			_md.setSpeeds(_motor1Speed, _motor2Speed);
 		}
 	}
@@ -72,10 +77,12 @@ void Motors::moveTime(int motor1Speed, int motor2Speed, long t){
 	_motor1Speed = motor1Speed;
 	_motor2Speed = motor2Speed;
 	_t = t;
+  _servoPos = _myservo.read();
 	
 	_start_time = millis();
 	
 	while (millis() - _start_time < _t) {
+    _myservo.write(_servoPos);
 		_md.setSpeeds(_motor1Speed,_motor2Speed);
 	}
 	
