@@ -47,7 +47,7 @@ bool ballAtFront = 9;
 int endCorner;
 bool entered = 0;
 
-int leftBlack = 300;
+int leftBlack = 310;
 int rightBlack= 200; 
 
 void setup() {
@@ -81,18 +81,20 @@ float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, av
 
 void loop()
 {
- //myservo.write(180);
-  checkEnd();
-  delay(500000000);
+ //myservo.write(0);
+ //checkEnd();
+//  endCorner = 3;
+//  sweepEndLeft;
+//  delay(500000000);
 //   LRavg();
 //  Serial.print(LLightAvg);
 //  Serial.print("   ");
 //  Serial.println(RLightAvg);
 //  printIR();
-//  servoPos(140);
-//  delay(500);
-//  servoPos(0);
-//  delay(500);
+  servoPos(140);
+  delay(500);
+  servoPos(0);
+  delay(500);
 //  LRavg();
 //  Serial.print(LLightAvg);
 //  Serial.print("   ");
@@ -292,13 +294,13 @@ void printIR() {
 }
 
 void LRavg() {
-LLightTotal = 0;
-RLightTotal = 0;
-for (int i=1; i<=LDRsamples;++i)
-{LLightTotal+=analogRead(A6);
- RLightTotal+=analogRead(A15);}
-LLightAvg = LLightTotal/LDRsamples;
-RLightAvg = RLightTotal/LDRsamples;
+  LLightTotal = 0;
+  RLightTotal = 0;
+  for (int i=1; i<=LDRsamples;++i)
+  {LLightTotal+=analogRead(A6);
+   RLightTotal+=analogRead(A15);}
+  LLightAvg = LLightTotal/LDRsamples;
+  RLightAvg = RLightTotal/LDRsamples;
 }
 
 void checkEnd(){
@@ -326,38 +328,128 @@ void checkEnd(){
 }
 
 void sweep(){
-//  switch (endCorner){
-//    case 1:
-//      sweepLeft();
-//      sweepRight();
-//      go b
-//      break;
-//    case 2:
-//      sweepLeft();
-//      sweepEnd(); 
-//      break;
-//    case 3:
-//      sweepEndLeft();
-//      sweepRight();
-//      break;
-//  } 
+  switch (endCorner){
+    case 1:
+      sweepLeft();
+      sweepRight();
+      mtr.moveCounts(50, -50, 910);
+      mtr.moveTime(-80, -85, 2000);
+      mtr.moveTime(50, 54, 9000);
+      sweepEndLeft;
+      break;
+    case 2:
+      sweepLeft();
+      sweepEndRight(); 
+      break;
+    case 3:
+      sweepEndLeft();
+      sweepRight();
+      endCorner = 1;
+      sweepEndLeft;
+      break;
+  } 
 }
 
 void sweepEndLeft(){
-  mtr.moveCounts(-50, -50, 300);
-  mtr.moveCounts(50, -50, 450);
-  mtr.moveCounts(-50, -50, 700);
-  mtr.moveCounts(-50, 50, 250);
+  if(endCorner == 1){
+    mtr.moveTime(80, 85, 2000);
+    mtr.moveCounts(-50, -50 ,1000);
+    mtr.moveCounts(-50, 50, 250);
+  }
+  else if(endCorner != 2){
+    mtr.moveCounts(-50, -50, 300);
+    mtr.moveCounts(50, -50, 450);
+    mtr.moveCounts(-50, -50, 700);
+    mtr.moveCounts(-50, 50, 250);   
+  }
   servoPos(0);
   mtr.moveTime(80, 85, 2000);
   mtr.moveCounts(-50, -50, 400);
+  delay(100);
   servoPos(140);
+  delay(100);
+  // add more sweep if needed later
+  mtr.moveCounts(50, -50, 910);
+  mtr.moveTime(-50, -50, 3000);
+  servoPos(180);
+  mtr.moveCounts(50, 50, 300);
+  mtr.moveCounts(-50, 50, 800);
+}
+
+void sweepEndRight(){
+  mtr.moveCounts(-50, -50, 300);
+  mtr.moveCounts(50, -50, 250);
+  servoPos(0);
+  mtr.moveTime(80, 85, 2000);
+  mtr.moveCounts(-50, -50, 400);
+  delay(100);
+  servoPos(140);
+  delay(100);
   // add more sweep if needed later
   mtr.moveCounts(50, -50, 910);
   mtr.moveTime(-50, -50, 3000);
   servoPos(180);
 }
 
+void sweepLeft(){
+  if(endCorner == 1){
+    mtr.moveTime(80, 85, 2000);
+    mtr.moveCounts(-50, -50 ,200);
+    mtr.moveCounts(-50, 50, 500);
+  }else{
+    mtr.moveCounts(-50, -50, 300);
+  }
+  servoPos(0);
+  delay(100);
+  mtr.moveTime(50, -50, 500);
+  mtr.moveTime(60, 80, 2000);
+  mtr.moveTime(80, 85, 1000);
+  mtr.moveCounts(-50, -50, 400);
+  delay(100);
+  servoPos(140);
+  delay(100);
+  mtr.moveCounts(50, -50, 350);
+  mtr.moveCounts(-60, -40, 500);
+  mtr.moveCounts(-50, 50, 250);
+  servoPos(0);
+  delay(100);
+  mtr.moveTime(80, 80, 2000);
+  mtr.moveCounts(-50, -50, 100);
+  delay(200);
+  servoPos(140);
+  delay(200);
+  mtr.moveTime(60, 60, 2000);
+  mtr.moveCounts(-50, -50, 1150);
+  mtr.moveCounts(40, -40, 468);
+}
+
+void sweepRight(){
+  mtr.moveTime(80, 85, 2000);
+  mtr.moveCounts(-50, -50 ,200);
+  mtr.moveCounts(50, -50, 460);
+  servoPos(0);
+  delay(100);
+  mtr.moveTime(-50, 50, 500);
+  mtr.moveTime(80, 70, 2000);
+  mtr.moveTime(80, 85, 1000);
+  mtr.moveCounts(-50, -50, 400);
+  delay(100);
+  servoPos(140);
+  delay(100);
+  mtr.moveCounts(-50, 50, 350);
+  mtr.moveCounts(-40, -60, 500);
+  mtr.moveCounts(50, -50, 220);
+  servoPos(0);
+  delay(100);
+  mtr.moveTime(80, 80, 2000);
+  mtr.moveCounts(-50, -50, 100);
+  delay(200);
+  servoPos(140);
+  delay(200);
+  mtr.moveTime(60, 60, 2000);
+  mtr.moveCounts(-50, -55, 1150);
+  mtr.moveCounts(-40, 40, 520); 
+}
 void servoPos(int newPos){
   int currentPos = myservo.read();
   if(currentPos < newPos){
