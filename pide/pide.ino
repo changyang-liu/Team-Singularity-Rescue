@@ -28,6 +28,9 @@ int maxloops = 200;
 float gradient;
 float gradSingle;
 
+int slopeCount;
+float prevFarL, prevCloseL, prevCloseR, prevFarR;
+
 float far_left;
 float close_left;
 float close_right;
@@ -41,8 +44,6 @@ int LDRsamples = 500;
 
 int counter = 0;
 
-int whiteCounter[100] = {0};
-int counts = 1;
 
 int LGreen;
 int RGreen;
@@ -59,9 +60,6 @@ void setup() {
   enableInterrupt(mtr.getEncoder1PinB(), doEncoderB1, CHANGE);
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
   md.init();
-//  md.setSpeeds(50, 50);
-pinMode(41, OUTPUT);
-digitalWrite(41, HIGH);
 }
 
 void loop(){  
@@ -72,7 +70,7 @@ void loop(){
 //Serial.print("  ");
 //Serial.println(colour3.green());
 // light.print();   
- light.printlog();
+//light.printlog();
 //Serial.print(LGreen);
 //Serial.print("   ");
 //Serial.println(RGreen);
@@ -84,6 +82,8 @@ void loop(){
 //  else if(slope() == -1) {md.setSpeeds(25,25);}
 //  else{md.setSpeeds(50,50);}
 
+ 
+
 
   if(!ini.button()){
     far_left = light.scale1();
@@ -92,20 +92,20 @@ void loop(){
     far_right = light.scale4();
 
 
-  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
-  else {counts = 0;}
-  if(counts > 500) {
-    md.setBrakes(400, 400);
-    delay(100);
-//    if(RLightAvg > 400)
-//    {
-//      if(colour2._r <  && colour2._g <  && colour2._b <  && colour3._r <  && colour3._g <  && colour3._b <  ) {
-//        mtr.moveCounts(-50,-50,200);
-//        //rescue zone
-//      }
-//    }
-    counts = 0;
-  }
+//  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
+//  else {counts = 0;}
+//  if(counts > 500) {
+//    md.setBrakes(400, 400);
+//    delay(100);
+////    if(RLightAvg > 400)
+////    {
+////      if(colour2._r <  && colour2._g <  && colour2._b <  && colour3._r <  && colour3._g <  && colour3._b <  ) {
+////        mtr.moveCounts(-50,-50,200);
+////        //rescue zone
+////      }
+////    }
+//    counts = 0;
+//  }
     
   if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
     md.setBrakes(400, 400);
@@ -123,7 +123,7 @@ void loop(){
     
   }
   
-  if((far_left + close_left*1.5)/2.5 < 50 && (far_right + close_right*1.5)/2.5 < 50 && abs(far_left - far_right) < 40 && (far_left < 50 || far_right <50) ){
+  if((far_left + close_left)/2 < 50 && (far_right + close_right)/2 < 50 && abs(far_left - far_right) < 40 && (far_left < 50 || far_right <50) ){
 		md.setBrakes(400, 400);
   delay(200);
   for(int i = 0; i < 5; i++){
@@ -156,10 +156,11 @@ void loop(){
        else {
       mtr.moveCounts(50, 50, 10);
        }
-		
-		
     }else{
       pid.track(far_left,close_left,close_right,far_right);
+      if(slopeCount < 600) {++slopeCount;}
+      if (slopeCount == 300) {prevFarL = far_left; prevCloseL = close_left; prevCloseR = close_right; prevFarR = far_right;}
+      if (slopeCount == 600) {if (abs(far_left - prevFarL) < 3 && abs (close_left - prevCloseL) <3 && abs(close_right - prevCloseR) <3 && abs(far_right - prevFarR) < 3){mtr.moveCounts(110, 110, 200);}slopeCount = 0;}
     }
   }else{
   md.setBrakes(400, 400);
