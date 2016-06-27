@@ -15,7 +15,7 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
-PIDe_Array pid = PIDe_Array(md,1.5,0.6,1.8,70,0.08,30);
+PIDe_Array pid = PIDe_Array(md,1.2,0.3,1.35,70,0.8,30);
 PIDe_Single single = PIDe_Single(md,35, 3); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
@@ -31,7 +31,7 @@ float gradient;
 float gradSingle;
 
 int slopeCount;
-float prevFarL, prevCloseL, prevCloseR, prevFarR;
+float prevFarL, prevCloseL, prevCloseR, prevFarR, downhillTime;
 
 float far_left;
 float close_left;
@@ -100,6 +100,7 @@ void loop(){
     md.setBrakes(400, 400);
     if(irFront.distance() >47 && irFront.distance() < 54 && irRight.distance() >9 && irRight.distance() < 14) {
       //rescue zone 
+      mtr.moveCounts(-100,-100,300);
     }
     counts = 0;
   }
@@ -121,10 +122,10 @@ void loop(){
     
   }
   
-  if((far_left + close_left)/2 < 50 && (far_right + close_right)/2 < 50 && abs(far_left - far_right) < 40 && (far_left < 50 || far_right <50) ){
+  if((far_left + close_left)/2 < 50 && (far_right + close_right)/2 < 50 && abs(far_left - far_right) < 30 && (far_left < 50 || far_right <50) ){
 		md.setBrakes(400, 400);
   delay(200);
-  for(int i = 0; i < 7; i++){
+  for(int i = 0; i < 5; i++){
     md.setSpeeds(-30, -30);
     if(colour2.green()){
       LGreen = 1;
@@ -133,7 +134,7 @@ void loop(){
     }
   }
   delay(200);
-  for(int i = 0; i < 7; i++){
+  for(int i = 0; i < 5; i++){
     md.setSpeeds(30, 30);
     if(colour2.green()){
       LGreen = 1;
@@ -156,9 +157,9 @@ void loop(){
        }
     }else{
       pid.track(far_left,close_left,close_right,far_right);
-      if(slopeCount < 600) {++slopeCount;}
-      if (slopeCount == 300) {prevFarL = far_left; prevCloseL = close_left; prevCloseR = close_right; prevFarR = far_right;}
-      if (slopeCount == 600) {if (abs(far_left - prevFarL) < 3 && abs (close_left - prevCloseL) <3 && abs(close_right - prevCloseR) <3 && abs(far_right - prevFarR) < 3){mtr.moveCounts(110, 110, 200);}slopeCount = 0;}
+      if(slopeCount < 400) {++slopeCount;}
+      if (slopeCount == 200) {prevFarL = far_left; prevCloseL = close_left; prevCloseR = close_right; prevFarR = far_right;}
+      if (slopeCount == 400) {if(slope() == -1) {pid.setMaxSpeed(20);} else if (abs(far_left - prevFarL) < 3 && abs (close_left - prevCloseL) <3 && abs(close_right - prevCloseR) <3 && abs(far_right - prevFarR) < 3){mtr.moveCounts(110, 110, 200);} else {pid.setMaxSpeed(70);}slopeCount = 0;}
     }
   }else{
   md.setBrakes(400, 400);
@@ -181,13 +182,13 @@ void singleTrack(int side, long t){
 
 float slope() {
   for(int i=0;i < 50;++i){
-  slopeAvg+=atan2(analogRead(A0),analogRead(A2))*180/3.1415926;
+  slopeAvg+=(atan2(analogRead(A2),analogRead(A0))*180/3.1415926)*100;
   }
   slopeAvg = slopeAvg/50;
-  if(slopeAvg >= 18) {
+  if(slopeAvg >=7050 ) {
     return -1;
   }
-  else if(slopeAvg <=14) {
+  else if(slopeAvg <=6900) {
     return 1;
   }
   else {return 0;}
