@@ -19,10 +19,10 @@ class Scaled
         int sensorPin3 = A13;
         int sensorPin4 = A14;
 
-	float max1 = 6.38, min1 = 5.50;
-	float max2 = 6.55, min2 = 5.80;
-	float max3 = 6.19, min3 = 5.35;
-	float max4 = 6.39, min4 = 5.55;
+	float max1 = 6.43, min1 = 4.51;
+	float max2 = 6.68, min2 = 4.84;
+	float max3 = 6.38, min3 = 4.33;
+	float max4 = 6.56, min4 = 4.85;
 
 	
 	float range1 = max1 - min1;
