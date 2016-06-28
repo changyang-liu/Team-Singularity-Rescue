@@ -12,6 +12,7 @@ class PIDe_Array {
 		void debug();
 		
 		const double e = 2.71828;
+		float _derivative = 0;
 		
 	private:
 		DualVNH5019MotorShield _md;
@@ -29,7 +30,6 @@ class PIDe_Array {
 		
 		float _prev_error = 0;
 		float _integral = 0;
-		float _derivative = 0;
 		
 		int _max_integral = 10000;
 		float _integral_factor = 0.8;
