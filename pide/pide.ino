@@ -46,7 +46,9 @@ int LDRsamples = 500;
 
 int counter = 0;
 
-int counts;
+int counts, gapCounts;
+//float dVal[100] = {0};
+int dCount;
 
 int LGreen;
 int RGreen;
@@ -93,17 +95,21 @@ void loop(){
     close_right = light.scale3();
     far_right = light.scale4();
 
-
-  if(far_left > 70 && close_left >70 && close_right >70 && far_right > 70) {++counts;}
-  else {counts = 0;}
-  while(counts > 500) {
-    md.setBrakes(400, 400);
-    if(irFront.distance() >47 && irFront.distance() < 54 && irRight.distance() >9 && irRight.distance() < 14) {
-      //rescue zone 
-      mtr.moveCounts(-100,-100,300);
-    }
-    counts = 0;
-  }
+//  if(far_left > 98 && close_left > 98 && close_right > 98 && far_right > 98) {++gapCounts;}
+//  if(gapCounts==3){ if(abs(pid._derivative) < 0.5){
+//  mtr.moveCounts(-60, -60, 100);
+//  float startGap = millis();
+//  while (millis() - startGap < 500) {
+//    far_left = light.scale1();
+//    close_left = light.scale2();
+//    close_right = light.scale3();
+//    far_right = light.scale4();
+//    pid.track(far_left,close_left,close_right,far_right);
+//  }
+//  mtr.moveCounts(60, 60, 70);
+//  gapCounts = 0;
+//  }
+//}
   
     
   if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
@@ -111,14 +117,18 @@ void loop(){
     delay(200);
     mtr.moveCounts(-60, -60, 240);
     mtr.moveCounts(-50, 50, 300);
-    mtr.moveCounts(60, 60, 250);
+    mtr.moveCounts(60, 60, 750);
+    mtr.moveCounts(50, -50, 270);
+    mtr.moveCounts(50, 50, 650);
+    mtr.moveCounts(50, -50, 300);
     while(close_right > 50) {
-      md.setSpeeds(70, 30);
+      md.setSpeeds(50, 50);
       close_right = light.scale3();
     }
-    mtr.moveTime(-50, 30, 450);
-    mtr.moveCounts(40, 40, 150);
-    mtr.moveTime(-50, 30, 1250);
+    singleTrack(1, 800);
+//    mtr.moveTime(-50, 30, 450);
+//    mtr.moveCounts(40, 40, 150);
+//    mtr.moveTime(-50, 30, 1250);
     
   }
   
@@ -159,7 +169,7 @@ void loop(){
       pid.track(far_left,close_left,close_right,far_right);
       if(slopeCount < 400) {++slopeCount;}
       if (slopeCount == 200) {prevFarL = far_left; prevCloseL = close_left; prevCloseR = close_right; prevFarR = far_right;}
-      if (slopeCount == 400) {if(slope() == -1) {pid.setMaxSpeed(20);} else if (abs(far_left - prevFarL) < 3 && abs (close_left - prevCloseL) <3 && abs(close_right - prevCloseR) <3 && abs(far_right - prevFarR) < 3){mtr.moveCounts(110, 110, 200);} else {pid.setMaxSpeed(70);}slopeCount = 0;}
+      if (slopeCount == 400) {if (abs(far_left - prevFarL) < 3 && abs (close_left - prevCloseL) <3 && abs(close_right - prevCloseR) <3 && abs(far_right - prevFarR) < 3){mtr.moveCounts(110, 110, 200);} else {pid.setMaxSpeed(70);}slopeCount = 0;}
     }
   }else{
   md.setBrakes(400, 400);
@@ -180,21 +190,21 @@ void singleTrack(int side, long t){
   }
 }
 
-float slope() {
-  for(int i=0;i < 50;++i){
-  slopeAvg+=(atan2(analogRead(A2),analogRead(A0))*180/3.1415926)*100;
-  }
-  slopeAvg = slopeAvg/50;
-  if(slopeAvg >=7050 ) {
-    return -1;
-  }
-  else if(slopeAvg <=6900) {
-    return 1;
-  }
-  else {return 0;}
-  return slopeAvg;
-  slopeAvg = 0;
-}
+//float slope() {
+//  for(int i=0;i < 50;++i){
+//  slopeAvg+=(atan2(analogRead(A2),analogRead(A0))*180/3.1415926)*100;
+//  }
+//  slopeAvg = slopeAvg/50;
+//  if(slopeAvg >=7050 ) {
+//    return -1;
+//  }
+//  else if(slopeAvg <=6900) {
+//    return 1;
+//  }
+//  else {return 0;}
+//  return slopeAvg;
+//  slopeAvg = 0;
+//}
 
 void LRavg() {
 LLightTotal = 0;
