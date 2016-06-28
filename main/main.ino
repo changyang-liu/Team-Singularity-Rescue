@@ -218,7 +218,7 @@ float slope() {
 
 void rescueZone(){
   myservo.attach(5);
-  pinMode(43, OUTPUT);
+  pinMode(45, OUTPUT);
   pinMode(41, OUTPUT);
   digitalWrite(43, HIGH);
   digitalWrite(41, HIGH);

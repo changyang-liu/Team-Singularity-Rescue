@@ -39,9 +39,38 @@ int ColourSensor2::green() {
 			++_counter;
 		}
 	}
-	
 	return result;
-	
+}
+
+void ColourSensor2::print(){
+	_first = true;
+	while (!_end) {
+		while (!Serial2.available()) {int useless = 0;}
+		int temp = Serial2.read();
+		if (temp == 3) {
+			if (_counter == 3 && !_first) {
+				_r = _readings[4];
+				_g = _readings[5];
+				_b = _readings[6];
+				Serial.print(_r);
+				Serial.print(" ");
+				Serial.print(_g);
+				Serial.print(" ");
+				Serial.println(_b);
+			} else {
+				_counter = 3;
+			}
+		}
+		
+		if (temp > 0 && temp < 256) {
+			if (_counter == 8) {
+				_counter = 0;
+				_first = false;
+			}
+			_readings[_counter] = temp;
+			++_counter;
+		}
+	}
 }
 
 ColourSensor3::ColourSensor3() {};
@@ -85,4 +114,35 @@ int ColourSensor3::green() {
 	
 	return result;
 	
+}
+
+void ColourSensor3::print(){
+	_first = true;
+	while (!_end) {
+		while (!Serial2.available()) {int useless = 0;}
+		int temp = Serial2.read();
+		if (temp == 3) {
+			if (_counter == 3 && !_first) {
+				_r = _readings[4];
+				_g = _readings[5];
+				_b = _readings[6];
+				Serial.print(_r);
+				Serial.print(" ");
+				Serial.print(_g);
+				Serial.print(" ");
+				Serial.println(_b);
+			} else {
+				_counter = 3;
+			}
+		}
+		
+		if (temp > 0 && temp < 256) {
+			if (_counter == 8) {
+				_counter = 0;
+				_first = false;
+			}
+			_readings[_counter] = temp;
+			++_counter;
+		}
+	}
 }

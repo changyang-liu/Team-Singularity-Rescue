@@ -60,9 +60,9 @@ void setup() {
     prevState = 1;
   }
   myservo.attach(5);
-  pinMode(43, OUTPUT);
+  pinMode(45, OUTPUT); // one side may be dim, change ports if so
   pinMode(41, OUTPUT);
-  digitalWrite(43, HIGH);
+  digitalWrite(45, HIGH);
   digitalWrite(41, HIGH);
   myservo.write(0);
   endCorner = 0;
@@ -73,9 +73,13 @@ void setup() {
 float currentDistLeft, previousDistLeft, maxDistLeft, dxLeft, sumdxLeft, avedxLeft;
 float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, avedxRight;
 
+
 void loop()
 {
-// myservo.write(0);
+// Serial.print(mtr.encoder1Pos);
+// Serial.print(" ");
+// Serial.println(mtr.encoder2Pos);
+ //myservo.write(179);
 //  LRavg();
 //  Serial.print(LLightAvg);
 //  Serial.print("   ");

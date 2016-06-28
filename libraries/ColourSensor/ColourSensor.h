@@ -9,6 +9,7 @@ class ColourSensor2 {
 	
 		int green();
 		int _r,_g,_b;
+		void print();
 		
 	private:
 		boolean _end = false;
@@ -27,7 +28,8 @@ class ColourSensor3 {
 		ColourSensor3();
 	
 		int green();
-		int _r,_g,_b;		
+		int _r,_g,_b;
+		void print();		
 	private:
 		boolean _end = false;
 		boolean _first = true;
