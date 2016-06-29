@@ -38,11 +38,15 @@ int LDRsamples = 20;
 bool ballAtLeft = 0;
 bool ballAtRight = 0;
 bool ballAtFront = 0;
+int entranceCorner;
 int endCorner;
 bool entered = 0;
 
-int leftBlack = 310;
-int rightBlack= 200; 
+float currentDistLeft, previousDistLeft, maxDistLeft, dxLeft, sumdxLeft, avedxLeft;
+float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, avedxRight;
+
+int leftBlack = 450;
+int rightBlack= 300; 
 
 void setup() {
   ini.initialize();
@@ -62,17 +66,12 @@ void setup() {
   myservo.attach(5);
   pinMode(45, OUTPUT); // one side may be dim, change ports if so
   pinMode(41, OUTPUT);
-  digitalWrite(45, HIGH);
-  digitalWrite(41, HIGH);
   myservo.write(0);
   endCorner = 0;
+  entranceCorner = 0;
 }
 
 //23 counts is roughly 1 cm (adjusted for inertia) at speed 60
-
-float currentDistLeft, previousDistLeft, maxDistLeft, dxLeft, sumdxLeft, avedxLeft;
-float currentDistRight, previousDistRight, maxDistRight, dxRight, sumdxRight, avedxRight;
-
 
 void loop()
 {
@@ -89,20 +88,40 @@ void loop()
 //  delay(500);
 //  servoPos(180);
 //  delay(500);
+//  servoPos(0);
+//  delay(500);
   mtr.stopIfFault();
   if (ini.button() == 0 && done == false && prevState == 1) {
+    Serial.println("entrance");
     if(entered == 0){
-      Serial.println("entrance");
-      entrance();
+     scanEntrance();
+     switch(entranceCorner){
+      case 1:
+        Serial.println(1);
+        entrance1();
+        break;
+      case 2:
+        Serial.println(2);
+         entrance2();
+        break;
+      case 3:
+        Serial.println(3);
+        entrance3();
+        break;
+      case 4:
+        Serial.println(4);
+        entrance4();
+        break; 
+    }
       entered = 1;
-    } 
+    }
     mtr.encoder1Pos = 0;
     while(ini.button() == 0){
       ballAtLeft = 0;
       ballAtRight = 0;
       ballAtFront = 0;
       myservo.write(40);
-      md.setSpeeds(40, 44);
+      md.setSpeeds(35, 45);
       scanLeft();
       scanRight();     
       if(ballAtLeft == 1 || ballAtRight == 1){
@@ -119,7 +138,7 @@ void loop()
       Serial.println("end");
       checkEnd();                                      
       sweep();
-    }else if(distTrav > 2800 && irFront.distance() < 10 && endCorner == 1){ //sweep both sides
+    }else if(distTrav > 2800 && irFront.distance() < 10 && endCorner == 1){ 
       checkEnd();
       sweep();
     }else if(ballAtFront == 1 && distTrav < 2300){
@@ -129,18 +148,35 @@ void loop()
       servoPos(180);
       delay(500);
       servoPos(60);    
-    }else if(ballAtLeft == 1 && distTrav > 800 && distTrav < 2500){
-      Serial.println("ball at left");
-      md.setBrakes(400, 400);
-      delay(500);
-      ballCollectLeft();
-    }else if(ballAtRight == 1 && distTrav < 2500){
-      Serial.println("ball at right");
-      md.setBrakes(400, 400);
-      delay(500);
-      ballCollectRight();                                         //check sweep cases
+    }else if(ballAtLeft == 1){
+      if(entranceCorner == 1 || entranceCorner == 2 && endCorner == 1){
+        if(distTrav > 800 && distTrav < 2500){ 
+          Serial.println("ball at left");
+          md.setBrakes(400, 400);
+          delay(500);
+          ballCollectLeft();
+        }
+      }else if(distTrav < 2500){
+          Serial.println("ball at left");
+          md.setBrakes(400, 400);
+          delay(500);
+          ballCollectLeft();        
+      }
+    }else if(ballAtRight == 1){ 
+      if(entranceCorner == 2 || entranceCorner == 1 && endCorner == 1){
+        if(distTrav > 800 && distTrav < 2500){
+          Serial.println("ball at right");
+          md.setBrakes(400, 400);
+          delay(500);
+          ballCollectRight(); //check sweep cases
+        }
+      }else if(distTrav < 2500){
+        Serial.println("ball at right");
+        md.setBrakes(400, 400);
+        delay(500);
+        ballCollectRight(); 
+      }
     }
-    //done = true;
   }
   else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
   else if (ini.button() == 1 && done == true) {done = false; prevState = 1;}
@@ -148,40 +184,206 @@ void loop()
   else {md.setBrakes(400, 400);}
 }
 
-void entrance() {
+void scanEntrance(){
+  int maxIRLeft = 0;
+  int maxIRRight = 0;
+  int x;
+  int y;
   mtr.encoder1Pos = 0;
-  mtr.encoder2Pos = 0;
-  while (ini.button() == 1) {md.setBrakes(400, 400);}
-  mtr.moveTime(60, 65, 300);
+  mtr.moveCounts(50, 60, 200); 
   LRavg();
-  while (abs(mtr.encoder1Pos) < 1650 && RLightAvg > rightBlack  && ini.button() == 0) {
+  while (abs(mtr.encoder1Pos) < 1650 && LLightAvg > leftBlack && RLightAvg > rightBlack) {
+    x = irLeft.distance();
+    y = irRight.distance();
     LRavg();
-    md.setSpeeds(60, 65);
+    md.setSpeeds(40, 45);
+    if(x > maxIRLeft){
+      maxIRLeft = x;
+    }
+    if(y > maxIRRight){
+      maxIRRight = y;
+    }
+    Serial.print(maxIRLeft);
+    Serial.print(" ");
+    Serial.println(maxIRRight);
   }
   md.setBrakes(400, 400);
-  delay(100);
-  LRavg();
+  if(maxIRLeft >= 90 && maxIRRight < 20){
+    entranceCorner = 1;
+  }else if(maxIRLeft  < 20 && maxIRRight >= 90){
+    entranceCorner = 2;
+  }else if(maxIRLeft < 20 && maxIRRight < 90){
+    entranceCorner = 3;
+  }else if(maxIRLeft < 90 && maxIRRight < 20){
+    entranceCorner = 4;
+  }else{
+    entranceCorner = 5;
+  }
+}
+
+//void entrance() {
+//  mtr.encoder1Pos = 0;
+//  mtr.encoder2Pos = 0;
+//  mtr.moveTime(50, 60, 300);
+//  LRavg();
+//  while (abs(mtr.encoder1Pos) < 1650 && RLightAvg > rightBlack  && ini.button() == 0) {
+//    LRavg();
+//    md.setSpeeds(50, 60);
+//  }
+//  md.setBrakes(400, 400);
+//  delay(100);
+//  if (RLightAvg <=rightBlack) {
+//    endCorner = 1;
+//    mtr.moveCounts(-60, -50, 280);
+//    mtr.moveCounts(40, -40, 470);
+//    mtr.moveCounts(-40, -40, 300);
+//    mtr.moveCounts(-40, 40, 980);
+//    mtr.moveTime(-90, -90, 1500); 
+//  }
+//  else {
+//    mtr.moveCounts(-40, -40, 200);
+//    servoPos(180);
+//    delay(100);
+//    mtr.moveTime(40, -40, 500);
+//    mtr.moveTime(90, 80, 2000);
+//    mtr.moveCounts(-40, -40, 100);
+//    servoPos(60);
+//    mtr.moveCounts(-60, -60, 470);
+//    mtr.moveCounts(40, -40, 450);
+//    mtr.moveCounts(-40, -40, 300);
+//    mtr.moveCounts(-40, 40, 980);
+//    mtr.moveTime(-90, -90, 1500); 
+//  }
+//}
+
+void entrance1(){
   if (RLightAvg <=rightBlack) {
     endCorner = 1;
     mtr.moveCounts(-60, -50, 280);
-    mtr.moveCounts(50, -50, 470);
-    mtr.moveCounts(-50, -50, 300);
-    mtr.moveCounts(-50, 50, 980);
+    mtr.moveCounts(40, -40, 470);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(-40, 40, 1100);
     mtr.moveTime(-90, -90, 1500); 
   }
   else {
+    mtr.moveCounts(-40, -40, 200);
     servoPos(180);
-    mtr.moveTime(60, 60, 2000);
-    mtr.moveCounts(-50, -50, 100);
+    delay(100);
+    mtr.moveTime(40, -40, 500);
+    mtr.moveTime(90, 80, 2000);
+    mtr.moveCounts(-40, -40, 100);
     servoPos(60);
     mtr.moveCounts(-60, -60, 470);
-    mtr.moveCounts(50, -50, 450);
-    mtr.moveCounts(-50, -50, 300);
-    mtr.moveCounts(-50, 50, 980);
+    mtr.moveCounts(40, -40, 450);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(-40, 40, 1100);
     mtr.moveTime(-90, -90, 1500); 
   }
 }
-  
+
+void entrance2(){
+  //Serial.println(LLightAvg);
+  if (LLightAvg <= leftBlack) {
+    endCorner = 1;
+    mtr.moveCounts(-60, -50, 280);
+    mtr.moveCounts(-40, 40, 490);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(40, -40, 980);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+  else {
+    mtr.moveCounts(-40, -40, 200);
+    servoPos(180);
+    mtr.moveTime(-40, 40, 500);
+    mtr.moveTime(80, 80, 2000);
+    mtr.moveCounts(-40, -40, 100);
+    servoPos(60);
+    mtr.moveCounts(-60, -60, 470);
+    mtr.moveCounts(-40, 40, 500);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(40, -40, 1000);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+}
+
+void entrance3(){
+  mtr.moveCounts(-40, -40, 1350);
+  mtr.moveCounts(-40, 40, 450);
+  mtr.moveCounts(-40, -40, 300);
+  mtr.moveCounts(-40, 40, 1200);
+  mtr.moveTime(-80, -90, 1500);
+    mtr.encoder1Pos = 0;
+  mtr.encoder2Pos = 0;
+  mtr.moveTime(50, 60, 300);
+  LRavg();
+  while (abs(mtr.encoder1Pos) < 1350 && RLightAvg > rightBlack  && ini.button() == 0) {
+    LRavg();
+    md.setSpeeds(50, 60);
+  }
+  md.setBrakes(400, 400);
+  delay(100);
+  if (RLightAvg <=rightBlack) {
+    endCorner = 1;
+    mtr.moveCounts(-60, -50, 280);
+    mtr.moveCounts(40, -40, 470);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(-40, 40, 980);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+  else {
+    mtr.moveCounts(-40, -40, 200);
+    servoPos(180);
+    delay(100);
+    mtr.moveTime(40, -40, 500);
+    mtr.moveTime(90, 80, 2000);
+    mtr.moveCounts(-40, -40, 100);
+    servoPos(60);
+    mtr.moveCounts(-60, -60, 470);
+    mtr.moveCounts(40, -40, 470);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(-40, 40, 980);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+}
+
+void entrance4(){
+  mtr.moveCounts(-40, -40, 1350);
+  mtr.moveCounts(40, -40, 450);
+  mtr.moveCounts(-40, -40, 300);
+  mtr.moveCounts(-40, 40, 1000);
+  mtr.moveTime(-80, -90, 1500);
+  mtr.encoder1Pos = 0;
+  mtr.encoder2Pos = 0;
+  mtr.moveTime(50, 60, 300);
+  LRavg();
+  while (abs(mtr.encoder1Pos) < 1350 && RLightAvg > rightBlack  && ini.button() == 0) {
+    LRavg();
+    md.setSpeeds(50, 60);
+  }
+  md.setBrakes(400, 400);
+  delay(100);
+  if (LLightAvg <= leftBlack) {
+    endCorner = 1;
+    mtr.moveCounts(-60, -50, 280);
+    mtr.moveCounts(-40, 40, 490);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(40, -40, 980);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+  else {
+    mtr.moveCounts(-40, -40, 200);
+    servoPos(180);
+    mtr.moveTime(-40, 40, 500);
+    mtr.moveTime(80, 80, 2000);
+    mtr.moveCounts(-40, -40, 100);
+    servoPos(60);
+    mtr.moveCounts(-60, -60, 470);
+    mtr.moveCounts(-40, 40, 500);
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(40, -40, 1000);
+    mtr.moveTime(-90, -90, 1500); 
+  }
+}
 
 void scanLeft() {
   ballAtLeft = 0;
@@ -231,32 +433,32 @@ void scanRight() {
 
 void ballCollectLeft() {
   Serial.println("start ballCollectLeft");
-  mtr.moveCounts(-50, -50 , 200);
-  mtr.moveCounts(-50, 50, 510);
+  mtr.moveCounts(-40, -40 , 200);
+  mtr.moveCounts(-40, 40, 510);
   servoPos(180);
-  mtr.moveTime(100, 105, 2000);
-  mtr.moveCounts(-50, -50, 100);
+  mtr.moveTime(100, 110, 2000);
+  mtr.moveCounts(-50, -55, 100);
   delay(200);
   servoPos(60);
   delay(200);
-  mtr.moveTime(60, 60, 2000);
-  mtr.moveCounts(-50, -50, 1150);
+  mtr.moveTime(60, 65, 2000);
+  mtr.moveCounts(-50, -55, 1100);
   mtr.moveCounts(40, -40, 468);
   Serial.println("end ballCollectLeft");
 }
 
 void ballCollectRight() {
   Serial.println("start ballCollectRight");
-  mtr.moveCounts(-50, -50 , 200);
-  mtr.moveCounts(50, -50, 450);
+  mtr.moveCounts(-40, -40 , 200);
+  mtr.moveCounts(40, -40, 450);
   servoPos(180);
-  mtr.moveTime(100, 105, 2000);
-  mtr.moveCounts(-50, -50, 100);
+  mtr.moveTime(100, 110, 2000);
+  mtr.moveCounts(-40, -40, 100);
   delay(200);
   servoPos(60);
   delay(200);
-  mtr.moveTime(60, 60, 2000);
-  mtr.moveCounts(-50, -55, 1150);
+  mtr.moveTime(60, 65, 2000);
+  mtr.moveCounts(-50, -55, 1100);
   mtr.moveCounts(-40, 40, 530);
   Serial.println("end ballCollectRight");
 }
@@ -271,6 +473,9 @@ void printIR() {
 }
 
 void LRavg() {
+  digitalWrite(45, HIGH);
+  digitalWrite(41, HIGH);
+  delay(10);
   LLightTotal = 0;
   RLightTotal = 0;
   for (int i=1; i<=LDRsamples;++i)
@@ -282,15 +487,15 @@ void LRavg() {
 
 void checkEnd(){
   if(endCorner != 1){
-    mtr.moveTime(80, 85, 2000);
-    mtr.moveCounts(-50, -50 ,200);
-    mtr.moveCounts(-50, 50, 500);
+    mtr.moveTime(80, 90, 2000);
+    mtr.moveCounts(-40, -40 ,200);
+    mtr.moveCounts(-40, 40, 500);
     mtr.encoder1Pos = 0;
     LRavg();
     while(mtr.encoder1Pos < 550 && RLightAvg > rightBlack){
       LRavg();
       Serial.println(RLightAvg);
-      md.setSpeeds(40, 44);
+      md.setSpeeds(40, 50);
     }
     md.setBrakes(400, 400);
     if(RLightAvg < rightBlack){
@@ -309,20 +514,27 @@ void sweep(){
     case 1:
       sweepLeft();
       sweepRight();
-      mtr.moveCounts(50, -50, 910);
-      mtr.moveTime(-80, -85, 2000);
-      mtr.moveTime(50, 54, 8000);
-      sweepEndLeft();
+      mtr.moveCounts(40, -40, 910);
+      mtr.moveTime(-80, -90, 2000);
+      mtr.moveTime(50, 60, 8000);
+      if(entranceCorner == 1 || entranceCorner == 3){
+        sweepEndLeft(); 
+      }else{
+        sweepEndRight();
+      }
+      done = true;
       break;
     case 2:
       sweepLeft();
       sweepEndRight(); 
+      done = true;
       break;
     case 3:
       sweepEndLeft();
       sweepRight();
       endCorner = 1;
       sweepEndLeft();
+      done = true;
       break;
   } 
 }
@@ -330,97 +542,101 @@ void sweep(){
 void sweepEndLeft(){
   Serial.println("begin end left");
   if(endCorner == 1){
-    mtr.moveTime(80, 85, 2000);
-    mtr.moveCounts(-50, -50 ,1000);
-    mtr.moveCounts(-50, 50, 250);
+    mtr.moveTime(80, 90, 2000);
+    mtr.moveCounts(-40, -40 ,1200);
+    mtr.moveCounts(-40, 40, 250);
   }
   else if(endCorner == 3){
-    mtr.moveCounts(-50, -50, 300);
-    mtr.moveCounts(50, -50, 450);
-    mtr.moveCounts(-50, -50, 700);
-    mtr.moveCounts(-50, 50, 250);   
+    mtr.moveCounts(-40, -40, 300);
+    mtr.moveCounts(40, -40, 450);
+    mtr.moveCounts(-40, -40, 700);
+    mtr.moveCounts(-40, 40, 250);   
   }
   servoPos(180);
-  mtr.moveTime(80, 85, 2000);
-  mtr.moveCounts(-50, -50, 400);
+  mtr.moveTime(80, 90, 2000);
+  mtr.moveCounts(-40, -40, 400);
   delay(100);
   servoPos(60);
   delay(100);
   // add more sweep if needed later
-  mtr.moveCounts(50, -50, 910);
-  mtr.moveTime(-50, -50, 3000);
+  mtr.moveCounts(40, -40, 950);
+  mtr.moveTime(-60, -60, 3000);
   servoPos(0);
   mtr.moveCounts(50, 50, 700);
-  mtr.moveCounts(-50, 50, 760);
+  mtr.moveCounts(-40, 40, 760);
 }
 
 void sweepEndRight(){
-  mtr.moveCounts(-50, -50, 300);
-  mtr.moveCounts(50, -50, 250);
+  if(endCorner == 1){
+    mtr.moveTime(80, 90, 2000);
+    mtr.moveCounts(-40, -40 ,1100);
+  }
+  mtr.moveCounts(-40, -40, 300);
+  mtr.moveCounts(40, -40, 250);
   servoPos(180);
-  mtr.moveTime(80, 85, 2000);
-  mtr.moveCounts(-50, -50, 400);
+  mtr.moveTime(80, 90, 2000);
+  mtr.moveCounts(-40, -40, 400);
   delay(100);
   servoPos(60);
   delay(100);
   // add more sweep if needed later
-  mtr.moveCounts(50, -50, 910);
-  mtr.moveTime(-50, -50, 3000);
+  mtr.moveCounts(40, -40, 950);
+  mtr.moveTime(-40, -40, 3000);
   servoPos(0);
 }
 
 void sweepLeft(){
   if(endCorner == 1){
-    mtr.moveTime(80, 85, 2000);
-    mtr.moveCounts(-50, -50 ,200);
-    mtr.moveCounts(-50, 50, 500);
+    mtr.moveTime(80, 90, 2000);
+    mtr.moveCounts(-40, -40 ,200);
+    mtr.moveCounts(-40, 40, 500);
   }else{
-    mtr.moveCounts(-50, -50, 300);
+    mtr.moveCounts(-40, -40, 300);
   }
   servoPos(180);
   delay(100);
-  mtr.moveTime(50, -50, 500);
-  mtr.moveTime(60, 80, 2000);
-  mtr.moveTime(80, 85, 1000);
-  mtr.moveCounts(-50, -50, 400);
+  mtr.moveTime(40, -40, 500);
+  mtr.moveTime(80, 80, 2000);
+  mtr.moveTime(80, 90, 1000);
+  mtr.moveCounts(-40, -40, 400);
   delay(100);
   servoPos(60);
   delay(100);
-  mtr.moveCounts(50, -50, 350);
+  mtr.moveCounts(40, -40, 350);
   mtr.moveCounts(-60, -40, 500);
-  mtr.moveCounts(-50, 50, 250);
+  mtr.moveCounts(-40, 40, 250);
   servoPos(180);
   delay(100);
-  mtr.moveTime(80, 80, 2000);
-  mtr.moveCounts(-50, -50, 100);
+  mtr.moveTime(80, 90, 2000);
+  mtr.moveCounts(-40, -40, 100);
   delay(200);
   servoPos(60);
   delay(200);
   mtr.moveTime(60, 60, 2000);
-  mtr.moveCounts(-50, -50, 1150);
+  mtr.moveCounts(-40, -40, 1150);
   mtr.moveCounts(40, -40, 468);
 }
 
 void sweepRight(){
-  mtr.moveTime(80, 85, 2000);
-  mtr.moveCounts(-50, -50 ,200);
-  mtr.moveCounts(50, -50, 460);
+  mtr.moveTime(80, 90, 2000);
+  mtr.moveCounts(-40, -40 ,200);
+  mtr.moveCounts(40, -40, 460);
   servoPos(180);
   delay(100);
-  mtr.moveTime(-50, 50, 500);
-  mtr.moveTime(80, 70, 2000);
-  mtr.moveTime(80, 85, 1000);
-  mtr.moveCounts(-50, -50, 400);
+  mtr.moveTime(-40, 40, 500);
+  mtr.moveTime(80, 80, 2000);
+  mtr.moveTime(80, 90, 1000);
+  mtr.moveCounts(-40, -40, 400);
   delay(100);
   servoPos(60);
   delay(100);
-  mtr.moveCounts(-50, 50, 350);
+  mtr.moveCounts(-40, 40, 350);
   mtr.moveCounts(-40, -60, 500);
-  mtr.moveCounts(50, -50, 220);
+  mtr.moveCounts(40, -40, 220);
   servoPos(180);
   delay(100);
   mtr.moveTime(80, 80, 2000);
-  mtr.moveCounts(-50, -50, 100);
+  mtr.moveCounts(-40, -40, 100);
   delay(200);
   servoPos(60);
   delay(200);
