@@ -10,16 +10,19 @@ class PIDe_Array {
 		void track(float far_left, float close_left, float close_right, float far_right);
 		void setMaxSpeed(float max_speed);
 		void debug();
+		float integral();
 		
 		const double e = 2.71828;
 		float _derivative = 0;
+		float _error = 0;
+		float greenIntegral = 0;
 		
 	private:
 		DualVNH5019MotorShield _md;
 	
 		float _far_left, _close_left, _close_right, _far_right;
 		float _left_ave, _right_ave;
-		float _error, _turn;
+		float _turn;
 		
 		float _kp;
 		float _ki;

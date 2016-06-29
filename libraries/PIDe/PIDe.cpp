@@ -25,6 +25,7 @@ void PIDe_Array::track(float far_left, float close_left, float close_right, floa
 	
 	_error = _left_ave - _right_ave;
 	_integral = _integral*_integral_factor + _error;
+	greenIntegral = greenIntegral*0.5 + _error;
 	_derivative = _error - _prev_error;
 	
 	// if (abs(_integral) > _max_integral) {
@@ -70,13 +71,13 @@ void PIDe_Single::track(int side, int close_left, int close_right) {
 	_close_right = close_right;
 	
 	if (side == 1) {
-		_error = _close_left-65;
+		_error = _close_left-50;
 		_turn = _error*_p;
 		
 		_speed1 = (_base + _turn)*0.6;
 		_speed2 = (_base - _turn);
 	} else if (side == 2) {
-		_error = close_right-65;
+		_error = close_right-50;
 		_turn = _error*_p;
 		
 		_speed1 = (_base - _turn);
