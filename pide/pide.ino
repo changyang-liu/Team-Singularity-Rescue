@@ -76,6 +76,7 @@ void loop(){
 //colour3.green();
 
 if(digitalRead(29)) {
+  md.setBrakes(400, 400);  // rescue zone
   delay(1000);
 }
 
@@ -132,8 +133,7 @@ if(digitalRead(29)) {
 //    singleTrack(1, 900);
 ////    mtr.moveTime(-50, 30, 450);
 ////    mtr.moveCounts(40, 40, 150);
-////    mtr.moveTime(-50, 30, 1250);
-//    
+////    mtr.moveTime(-50, 30, 1250); 
 //  }
 
   

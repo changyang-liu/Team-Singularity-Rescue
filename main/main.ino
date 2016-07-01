@@ -15,8 +15,8 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 DualVNH5019MotorShield md;
 Scaled light;
 Initialization ini;
-PIDe_Array pid = PIDe_Array(md,1.2,0.3,1.35,70,0.8,30);
-PIDe_Single single = PIDe_Single(md,30, 3); //base spd, kp
+PIDe_Array pid = PIDe_Array(md,1.2,0.3,1.45,70,0.8,30);
+PIDe_Single single = PIDe_Single(md,35, 3); //base spd, kp
 ColourSensor2 colour2 = ColourSensor2();
 ColourSensor3 colour3 = ColourSensor3();
 Servo myservo;
@@ -37,9 +37,15 @@ long LLightTotal, RLightTotal, LLightAvg, RLightAvg;
 int LDRsamples = 20;
 
 int counter = 0;
+
+int gap_count = 0;
+int threshold = 10;
+long gap_end = 0;
+long slow_time = 500;
+
 int line;
 
-int counts, gapCounts,rescue,LGreen,RGreen;
+int counts, gapCounts, rescue_counter = 0, obst_counter = 0, LGreen, RGreen;
 
 void doEncoderA1(){mtr.getPastB1()?mtr.subtrEncoder1():mtr.addEncoder1();}
 void doEncoderA2(){mtr.getPastB2()?mtr.subtrEncoder2():mtr.addEncoder2();}
@@ -71,17 +77,28 @@ void setup() {
   enableInterrupt(mtr.getEncoder2PinB(), doEncoderB2, CHANGE);
   md.init();
   pinMode(29,INPUT_PULLUP);
+  pinMode(45, OUTPUT); // one side may be dim, change ports if so
+  pinMode(41, OUTPUT);
+  myservo.attach(5);
+  myservo.write(0);
+  myservo.detach();
 }
 
-void loop(){  
-//Serial.print(mtr.encoder1Pos);
+void loop(){
+//  servoPos(180);
+//  delay(500);
+//  myservo.write(10);
+//  delay(500);
+// myservo.write(180);
+   
+ //Serial.print(mtr.encoder1Pos);
 //Serial.print("   ");
 //Serial.println(mtr.encoder2Pos);
 //Serial.print(colour2.green());
 //Serial.print("  ");
 //Serial.println(colour3.green());
-// light.print();   
-// light.printlog();
+// light.print();
+//light.printlog();
 //Serial.println(colour2.green());
 //colour3.green();
     LGreen = 0;
@@ -92,12 +109,17 @@ void loop(){
 //Serial.println(irRight.distance());
 //colour3.green();
 
-if(digitalRead(29)) {
-  md.setBrakes(400, 400);  // rescue zone
-  delay(1000);
-  rescue = 1;
-  rescueZone();
-}
+//Serial.println(digitalRead(29));
+
+//
+//for(int w=0;w<5;w++){mtr.moveCounts(50,-50,10); if(close_left<70){line=1;} }
+//for(int q=0;q<5;q++){mtr.moveCounts(-50,50,10); if(close_right<70){line=1;} }
+//if(line=1){mtr.moveCounts(50, 50, 60);} //if there's a line in front of the junction
+//      else{
+//            //tJunction, check for left/right junction here
+//          }
+//      }
+      
 
   if(!ini.button()){
     far_left = light.scale1();
@@ -118,84 +140,62 @@ if(digitalRead(29)) {
 //    }
 //    }
 
-//  if(far_left > 98 && close_left > 98 && close_right > 98 && far_right > 98) {++gapCounts;}
-//  if(gapCounts==3){ if(abs(pid._derivative) < 0.5){
-//  mtr.moveCounts(-60, -60, 100);
-//  float startGap = millis();
-//  while (millis() - startGap < 500) {
-//    far_left = light.scale1();
-//    close_left = light.scale2();
-//    close_right = light.scale3();
-//    far_right = light.scale4();
-//    pid.track(far_left,close_left,close_right,far_right);
-//  }
-//  mtr.moveCounts(60, 60, 70);
-//  gapCounts = 0;
-//  }
-//}
-  
-    
-//  if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
+//  if(digitalRead(29)) {              // rescue zone ** DON'T FORGET TO INCLUDE !!!!!!!
+//    rescue_counter += 1;
+//  }  
+//
+//  if(rescue_counter > 5){
 //    md.setBrakes(400, 400);
-//    delay(200);
-//    mtr.moveCounts(-60, -60, 240);
-//    mtr.moveCounts(-50, 50, 300);
-//    mtr.moveCounts(60, 60, 750);
-//    mtr.moveCounts(50, -50, 270);
-//    mtr.moveCounts(50, 50, 600);
-//    mtr.moveCounts(50, -50, 300);
-//    while(close_right > 50) {
-//      md.setSpeeds(50, 50);
-//      close_right = light.scale3();
-//    } 
-//    singleTrack(1, 900);
-////    mtr.moveTime(-50, 30, 450);
-////    mtr.moveCounts(40, 40, 150);
-////    mtr.moveTime(-50, 30, 1250);
-//    
+//    rescueZone();
 //  }
 
-  
+  if(!digitalRead(ini.touchSensorPin)) {      //obstacle code
+    obst_counter += 1;
+  }
+
+  if(obst_counter == 1){
+    obstacleLeft();
+    //obstacleRight();
+  }else if(obst_counter == 2){
+    //obstacleLeft();
+    //obstacleRight();
+  }else if(obst_counter == 3){
+    //obstacleLeft();
+    //obstacleRight();
+  }
   
   if((far_left + close_left)/2 < 50 && (far_right + close_right)/2 < 50 && abs(far_left - far_right) <30 && (far_left < 50 || far_right <50) ){
     md.setBrakes(400, 400);
   delay(200);
   for(int i = 0; i < 9; i++){
-    md.setSpeeds(-30, -30);
+    mtr.greenCounts(-45, -45, 6);
+    delay(10);
     if(colour2.green()){
       LGreen = 1;
     }else if(colour3.green()){
       RGreen = 1;
     }
   }
-  delay(200);
-  for(int i = 0; i < 8; i++){
-    md.setSpeeds(30, 30);
-    if(colour2.green()){
-      LGreen = 1;
-    }else if(colour3.green()){
-      RGreen = 1;
-    }
-  }
+//  for(int i = 0; i < 7; i++){
+//    md.setSpeeds(30, 30);
+//    if(colour2.green()){
+//      LGreen = 1;
+//    }else if(colour3.green()){
+//      RGreen = 1;
+//    }
+//  }
    
      if (LGreen == 1) {
-        mtr.moveCounts(-50, -50, 50);
+//        while(close_left<1) {md.setSpeeds(-35,-35);close_left=light.scale2();}
         delay(100);
-        singleTrack(1, 800);
+        singleTrack(1, 950);
       }else if (RGreen == 1){
-        mtr.moveCounts(-50, -50, 50);
+//        mtr.moveCounts(-50, -50, 65);
+//        while(close_right<1) {md.setSpeeds(-35,-35);close_right=light.scale3();}
         delay(100);
-        singleTrack(2,800);
+        singleTrack(2, 950);
       }else {
-        if (pid.greenIntegral > 35) {
-          mtr.moveCounts(-50,50,300);
-          mtr.moveCounts(50,50,100);
-        } else if (pid.greenIntegral < -35) {
-          mtr.moveCounts(50,-50,300);
-          mtr.moveCounts(50,50,100);
-        } else {
           mtr.moveCounts(50,50,150);
-        }
       }
 //      for(int w=0;w<5;w++){mtr.moveCounts(50,-50,10); if(close_left<70){line=1;} }
 //      for(int q=0;q<5;q++){mtr.moveCounts(-50,50,10); if(close_right<70){line=1;} }
@@ -203,9 +203,28 @@ if(digitalRead(29)) {
 //      else{
 //            //tJunction, check for left/right junction here
 //          }
-//      }
     }else{
+      
       pid.track(far_left,close_left,close_right,far_right);
+//      if (pid.d() < 20 && pid.d() > -20 && pid.p() < 20 && pid.p() > -20 && pid.i() < 20 && pid.i() > -20) {
+//        ++gap_count;
+//      } else {
+//        if (gap_count > threshold) {
+//          gap_end = millis();
+//        }
+//        gap_count = 0;
+//      }
+//
+//      if (gap_count > threshold) {
+//        pid.setMaxSpeed(35);
+//      } else {
+//        if (millis() - gap_end < slow_time) {
+//          pid.setMaxSpeed(35);
+//        } else {
+//          pid.setMaxSpeed(70);
+//        }
+//      }
+
     }
   }else{
   md.setBrakes(400, 400);
@@ -226,27 +245,70 @@ void singleTrack(int side, long t){
   }
 }
 
+void obstacleLeft(){
+  md.setBrakes(400, 400);
+  delay(200);
+  mtr.greenCounts(-60, -60, 120);
+  mtr.greenCounts(-50, 50, 380);
+  mtr.greenCounts(60,60, 330);
+  close_left = light.scale2();
+  
+  while(close_left > 70){
+    md.setSpeeds(80, 40);
+    close_left = light.scale2();
+  }
+  md.setBrakes(400,400);
+  delay(100);
+  close_left = light.scale2();
+  while(close_left > 80) {
+    md.setSpeeds(40,40);
+    close_left = light.scale2();
+  }
+  md.setBrakes(400,400);
+  delay(100);
+  singleTrack(1, 900);
+}
+
+void obstacleRight(){
+  md.setBrakes(400, 400);
+  delay(200);
+  mtr.greenCounts(-60, -60, 120);
+  mtr.greenCounts(50, -50, 380);
+  mtr.greenCounts(60,60, 330);
+  close_right = light.scale3();
+  while(close_left > 70){
+    md.setSpeeds(30, 80);
+    close_right = light.scale3();
+  }
+  md.setBrakes(400,400);
+  delay(100);
+  close_right = light.scale3();
+  while(close_right > 80) {
+    md.setSpeeds(40,40);
+    close_right = light.scale3();
+  }
+  md.setBrakes(400,400);
+  delay(100);
+  singleTrack(2, 900);
+}
+
 void rescueZone(){
-  done = false;
-  if (ini.button() == 0) {
-    prevState = 0;
-  }
-  else {
-    prevState = 1;
-  }
   myservo.attach(5);
-  pinMode(45, OUTPUT); // one side may be dim, change ports if so
-  pinMode(41, OUTPUT);
   myservo.write(0);
+  done = false;
   endCorner = 0;
   entranceCorner = 0;
-  while(rescue = 1){
+  while(rescue_counter > 5){
     mtr.stopIfFault();
-    if (ini.button() == 0 && done == false && prevState == 1) {
-      Serial.println("entrance");
+    if (ini.button() == 0 && done == false) {
       if(entered == 0){
+       Serial.println("entrance");
        scanEntrance();
        switch(entranceCorner){
+        case 0:
+          Serial.println(0);
+          entrance1();
+          break;
         case 1:
           Serial.println(1);
           entrance1();
@@ -263,7 +325,7 @@ void rescueZone(){
           Serial.println(4);
           entrance4();
           break; 
-      }
+        }
         entered = 1;
       }
       mtr.encoder1Pos = 0;
@@ -271,7 +333,7 @@ void rescueZone(){
         ballAtLeft = 0;
         ballAtRight = 0;
         ballAtFront = 0;
-        myservo.write(40);
+        myservo.write(60);
         md.setSpeeds(35, 45);
         scanLeft();
         scanRight();     
@@ -301,13 +363,13 @@ void rescueZone(){
         servoPos(60);    
       }else if(ballAtLeft == 1){
         if(entranceCorner == 1 || entranceCorner == 2 && endCorner == 1){
-          if(distTrav > 800 && distTrav < 2500){ 
+          if(distTrav > 900 && distTrav < 2300){ 
             Serial.println("ball at left");
             md.setBrakes(400, 400);
             delay(500);
             ballCollectLeft();
           }
-        }else if(distTrav < 2500){
+        }else if(distTrav < 2300){
             Serial.println("ball at left");
             md.setBrakes(400, 400);
             delay(500);
@@ -315,13 +377,13 @@ void rescueZone(){
         }
       }else if(ballAtRight == 1){ 
         if(entranceCorner == 2 || entranceCorner == 1 && endCorner == 1){
-          if(distTrav > 800 && distTrav < 2500){
+          if(distTrav > 900 && distTrav < 2300){
             Serial.println("ball at right");
             md.setBrakes(400, 400);
             delay(500);
             ballCollectRight(); //check sweep cases
           }
-        }else if(distTrav < 2500){
+        }else if(distTrav < 2300){
           Serial.println("ball at right");
           md.setBrakes(400, 400);
           delay(500);
@@ -329,9 +391,6 @@ void rescueZone(){
         }
       }
     }
-    else if (ini.button() == 0 && done == true) {md.setBrakes(400, 400);}
-    else if (ini.button() == 1 && done == true) {done = false; prevState = 1;}
-    else if (ini.button() == 1 && prevState == 0) {prevState = 1;}
     else {md.setBrakes(400, 400);}
   }
 }
@@ -360,13 +419,13 @@ void scanEntrance(){
     Serial.println(maxIRRight);
   }
   md.setBrakes(400, 400);
-  if(maxIRLeft >= 90 && maxIRRight < 20){
+  if(maxIRLeft >= 85 && maxIRRight < 20){
     entranceCorner = 1;
-  }else if(maxIRLeft  < 20 && maxIRRight >= 90){
+  }else if(maxIRLeft  < 20 && maxIRRight >= 85){
     entranceCorner = 2;
-  }else if(maxIRLeft < 20 && maxIRRight < 90){
+  }else if(maxIRLeft < 20 && maxIRRight < 85){
     entranceCorner = 3;
-  }else if(maxIRLeft < 90 && maxIRRight < 20){
+  }else if(maxIRLeft < 85 && maxIRRight < 20){
     entranceCorner = 4;
   }else{
     entranceCorner = 5;
@@ -411,10 +470,10 @@ void scanEntrance(){
 void entrance1(){
   if (RLightAvg <=rightBlack) {
     endCorner = 1;
-    mtr.moveCounts(-60, -50, 280);
+    mtr.moveCounts(-60, -50, 310);
     mtr.moveCounts(40, -40, 470);
     mtr.moveCounts(-40, -40, 300);
-    mtr.moveCounts(-40, 40, 1100);
+    mtr.moveCounts(-40, 40, 990);
     mtr.moveTime(-90, -90, 1500); 
   }
   else {
@@ -428,7 +487,7 @@ void entrance1(){
     mtr.moveCounts(-60, -60, 470);
     mtr.moveCounts(40, -40, 450);
     mtr.moveCounts(-40, -40, 300);
-    mtr.moveCounts(-40, 40, 1100);
+    mtr.moveCounts(-40, 40, 990);
     mtr.moveTime(-90, -90, 1500); 
   }
 }
@@ -644,7 +703,7 @@ void checkEnd(){
     mtr.moveCounts(-40, 40, 500);
     mtr.encoder1Pos = 0;
     LRavg();
-    while(mtr.encoder1Pos < 550 && RLightAvg > rightBlack){
+    while(abs(mtr.encoder1Pos) < 550 && RLightAvg > rightBlack){
       LRavg();
       Serial.println(RLightAvg);
       md.setSpeeds(40, 50);
@@ -715,7 +774,7 @@ void sweepEndLeft(){
   mtr.moveTime(-60, -60, 3000);
   servoPos(0);
   mtr.moveCounts(50, 50, 700);
-  mtr.moveCounts(-40, 40, 760);
+  mtr.moveCounts(-40, 40, 850);
 }
 
 void sweepEndRight(){
