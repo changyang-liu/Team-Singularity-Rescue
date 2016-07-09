@@ -25,7 +25,7 @@ SharpIR irFront = SharpIR(A8);
 SharpIR irRight = SharpIR(A9);
 SharpIR irLeft = SharpIR(A10);
 
-int slopeCount;
+int speedBump;
 float prevFarL, prevCloseL, prevCloseR, prevFarR, downhillTime;
 
 float far_left;
@@ -38,6 +38,7 @@ int LDRsamples = 500;
 
 int counter = 0;
 int line;
+float accelReading, accelDiff, prevAccel, grad;
 
 int counts, gapCounts,rescue,LGreen,RGreen;
 
@@ -75,10 +76,10 @@ void loop(){
 //Serial.println(irRight.distance());
 //colour3.green();
 
-if(digitalRead(29)) {
-  md.setBrakes(400, 400);
-  delay(1000);
-}
+//if(digitalRead(29)) {
+//  md.setBrakes(400, 400);
+//  delay(1000);
+//}
 
 
   if(!ini.button()){
@@ -161,13 +162,25 @@ if(digitalRead(29)) {
   }
    
      if (LGreen == 1) {
+        if(slope()==-1) {
+          mtr.moveTime(-90, 90, 200);
+          mtr.moveTime(90, 90, 100);
+        }
+        else{
         mtr.moveCounts(-50, -50, 50);
         delay(100);
         singleTrack(1, 800);
+        }
       }else if (RGreen == 1){
+         if(slope()==-1) {
+          mtr.moveTime(90, -90, 200);
+          mtr.moveTime(90, 90, 100);
+        }
+        else{
         mtr.moveCounts(-50, -50, 50);
         delay(100);
         singleTrack(2,800);
+        }
       }else {
         if (pid.greenIntegral > 35) {
           mtr.moveCounts(-50,50,300);
@@ -188,6 +201,9 @@ if(digitalRead(29)) {
 //		  }
     }else{
       pid.track(far_left,close_left,close_right,far_right);
+      if(speedBump <400) {speedBump++;}
+      if(speedBump==200 ){prevFarL=far_left;prevCloseL=close_left;prevCloseR=close_right;prevFarR=far_right;}
+      if (speedBump == 400){if(abs(far_left-prevFarL)<4 && abs(close_left-prevCloseL)<4 && abs(close_right-prevCloseR)<4 && abs(far_right-prevFarR)<4) {accele();}}
     }
   }else{
   md.setBrakes(400, 400);
@@ -205,6 +221,30 @@ void singleTrack(int side, long t){
     while (millis() - start_time < t) {
       single.track(2, light.scale2(), light.scale3()); 
     }
+  }
+}
+
+void accele() {
+  for(int r=0;r<50;r++) {
+    accelReading = analogRead(A3);
+    accelDiff += abs(accelReading - prevAccel);
+    prevAccel = accelReading;
+  }
+  accelDiff=accelDiff/20;
+  if(accelDiff<80) {
+    pid.setMaxSpeed(120);
+    delay(1000);
+    pid.setMaxSpeed(70);
+  }
+}
+
+int slope() {
+  for(int y=0;y<50;y++) {
+    grad+=atan2(analogRead(A5),analogRead(A3))*180/3.14159265358979323846; 
+  }
+  grad=grad/50;
+  if(grad>25) {
+    return -1;
   }
 }
 
